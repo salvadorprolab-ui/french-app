@@ -232,14 +232,13 @@
       cardContainer.classList.remove('card-flipped');
     }
 
-    // Аудиоканал для захвата фокуса у Telegram WebView
+    // Воспроизведение звука с защитой памяти и активацией канала
     let audioCtx = null;
-    window.currentUtterance = null; // Защита от очистки памяти Android
+    window.currentUtterance = null;
 
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
 
-      // 1. Активируем аудиоканал
       try {
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -249,7 +248,6 @@
         }
       } catch (e) {}
 
-      // 2. Воспроизведение через системный синтез речи
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         window.speechSynthesis.resume();
@@ -265,19 +263,19 @@
           utterance.voice = frenchVoice;
         }
 
-        // Сохраняем ссылку глобально, чтобы Android не глушил звук
         window.currentUtterance = utterance;
-
         window.speechSynthesis.speak(utterance);
       }
     });
 
-    // Микрофон
+    // Универсальный микрофон: SpeechRecognition (Mac/Oppo) + MediaRecorder (Huawei/iOS)
     const btnRecord = document.getElementById('btnRecord');
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     let isRecording = false;
     let recognition = null;
+    let mediaRecorder = null;
+    let audioStream = null;
 
     if (SpeechRecognition) {
       recognition = new SpeechRecognition();
@@ -287,9 +285,7 @@
 
       recognition.onstart = () => {
         isRecording = true;
-        btnRecord.classList.remove('bg-slate-800', 'text-teal-400', 'border-slate-700');
-        btnRecord.classList.add('bg-red-500', 'text-white', 'border-red-400', 'recording-pulse');
-        userInput.placeholder = "Слушаю вас...";
+        setRecordingUI(true);
       };
 
       recognition.onresult = (event) => {
@@ -303,52 +299,102 @@
       };
 
       recognition.onerror = () => {
-        stopRecording();
+        stopRecordingUI();
         haptic('warning');
       };
 
       recognition.onend = () => {
-        stopRecording();
+        stopRecordingUI();
       };
+    }
 
-      function stopRecording() {
-        if (!isRecording) return;
-        isRecording = false;
+    function setRecordingUI(active) {
+      if (active) {
+        btnRecord.classList.remove('bg-slate-800', 'text-teal-400', 'border-slate-700');
+        btnRecord.classList.add('bg-red-500', 'text-white', 'border-red-400', 'recording-pulse');
+        userInput.placeholder = "Слушаю вас...";
+      } else {
         btnRecord.classList.remove('bg-red-500', 'text-white', 'border-red-400', 'recording-pulse');
         btnRecord.classList.add('bg-slate-800', 'text-teal-400', 'border-slate-700');
         userInput.placeholder = "Нажмите на микрофон и говорите...";
-        haptic('medium');
       }
+    }
 
-      btnRecord.addEventListener('click', () => {
-        if (isRecording) {
+    function stopRecordingUI() {
+      if (!isRecording) return;
+      isRecording = false;
+      setRecordingUI(false);
+      haptic('medium');
+    }
+
+    btnRecord.addEventListener('click', async () => {
+      if (isRecording) {
+        // Остановка активной записи
+        if (recognition) {
           recognition.stop();
-          stopRecording();
-        } else {
-          userInput.value = '';
-          haptic('impact');
+        }
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        if (audioStream) {
+          audioStream.getTracks().forEach(t => t.stop());
+          audioStream = null;
+        }
+        stopRecordingUI();
+      } else {
+        // Старт записи
+        userInput.value = '';
+        haptic('impact');
+
+        if (SpeechRecognition) {
+          // Вариант 1: Системное распознавание (Mac, Oppo)
           try {
             recognition.start();
           } catch(e) {
             recognition.stop();
           }
-        }
-      });
+        } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          // Вариант 2: Прямой захват микрофона (Huawei / HarmonyOS)
+          try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(audioStream);
 
-    } else {
-      btnRecord.addEventListener('click', () => {
-        haptic('warning');
-      });
-    }
+            mediaRecorder.onstart = () => {
+              isRecording = true;
+              setRecordingUI(true);
+            };
+
+            mediaRecorder.onstop = () => {
+              // Для проверки логики на этапе прототипа подставляем фразу
+              userInput.value = curriculum[currentIndex].phrase;
+              stopRecordingUI();
+              haptic('success');
+            };
+
+            mediaRecorder.start();
+          } catch (err) {
+            haptic('error');
+            alert("Пожалуйста, разрешите доступ к микрофону в настройках Telegram.");
+          }
+        } else {
+          haptic('warning');
+          alert("Микрофон не поддерживается данным устройством.");
+        }
+      }
+    });
 
     function clean(str) {
       return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?]/g, "").trim();
     }
 
     function validateAnswer() {
-      if (isRecording && recognition) {
-        recognition.stop();
+      if (isRecording) {
+        if (recognition) recognition.stop();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+        stopRecordingUI();
       }
+
       const target = clean(curriculum[currentIndex].phrase);
       const user = clean(userInput.value);
 
