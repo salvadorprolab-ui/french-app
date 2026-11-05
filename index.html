@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>French Voice Tutor</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#0B0F17',
+              card: '#131B2B',
+              accent: '#2DD4BF',
+              gold: '#E8B84B'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .card-inner {
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+    }
+    .card-flipped {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+    }
+    .shiver {
+      animation: shiver 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes shiver {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+  </style>
+</head>
+<body class="bg-[#0B0F17] text-slate-100 min-h-screen flex flex-col justify-between p-4 antialiased select-none overflow-x-hidden">
+
+  <!-- Шапка приложения -->
+  <header class="flex items-center justify-between py-2 border-b border-slate-800/80">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
+      <span class="text-xs uppercase tracking-widest font-semibold text-slate-400">Paris • Métro Bastille</span>
+    </div>
+    <div class="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-800 text-teal-300" id="cardProgress">
+      01 / 03
+    </div>
+  </header>
+
+  <!-- Интерактивная 3D-карточка -->
+  <main class="flex-1 flex flex-col justify-center my-auto py-3 perspective-1000">
+    <div id="cardContainer" class="card-inner relative w-full max-w-sm mx-auto h-[480px]">
+      
+      <!-- Лицевая сторона -->
+      <div class="card-front absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-slate-700/60 p-5 flex flex-col justify-between shadow-2xl overflow-hidden">
+        
+        <!-- Предметная сцена -->
+        <div class="relative w-full h-40 rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900 flex-shrink-0">
+          <img 
+            id="sceneImage"
+            src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80" 
+            alt="Comptoir en zinc et machine à café" 
+            class="w-full h-full object-cover brightness-90 contrast-105"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-[#131B2B] via-transparent to-transparent"></div>
+          <div id="sceneContextRu" class="absolute bottom-2 left-3 right-3 text-xs text-slate-300 font-medium truncate">
+            У цинковой стойки парижского бистро
+          </div>
+        </div>
+
+        <!-- Речевой блок -->
+        <div class="flex flex-col items-center justify-center my-auto text-center py-1">
+          <button id="btnListen" class="w-14 h-14 rounded-full bg-teal-500/10 border border-teal-400/40 text-teal-400 flex items-center justify-center mb-2 shadow-lg shadow-teal-950/40 active:scale-95 transition-transform duration-150">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          </button>
+          <div id="targetPhrase" class="text-lg font-bold text-slate-100 tracking-tight">
+            "Salut ! Un p'tit déca, s'te plaît."
+          </div>
+          <div id="targetPhonetic" class="text-xs text-slate-400 font-mono mt-0.5">
+            /sa.ly ɛ̃ pti de.ka stə plɛ/
+          </div>
+        </div>
+
+        <!-- Поле ввода и микрофон -->
+        <div class="relative w-full flex items-center gap-2">
+          <input 
+            id="userInput"
+            type="text" 
+            placeholder="Повторите голосом или напишите..."
+            class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition-colors"
+          />
+          <button id="btnRecord" class="w-12 h-11 rounded-xl bg-slate-800 border border-slate-700 text-teal-400 flex items-center justify-center active:scale-90 transition-transform">
+            <svg id="micIcon" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Тыльная сторона карточки -->
+      <div class="card-back absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-teal-500/40 p-6 flex flex-col justify-between shadow-2xl">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Смысловой перевод</span>
+          <h2 id="backTranslation" class="text-xl font-bold text-slate-100 mt-2">
+            Привет! Маленький декаф, пожалуйста.
+          </h2>
+          <div class="mt-4 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+            <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide">Разговорный фокус:</span>
+            <p id="backColloquial" class="text-xs text-slate-300 mt-1 leading-relaxed">
+              Вместо книжного «s'il vous plaît» парижане используют короткую связку «s'te plaît», а «petit» редуцируется в «p'tit».
+            </p>
+          </div>
+        </div>
+        <button id="btnFlipBack" class="w-full py-3 rounded-xl bg-slate-800 text-slate-200 text-sm font-semibold border border-slate-700 active:scale-95 transition-transform">
+          ← Вернуться к фразе
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Нижняя панель действий -->
+  <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 pt-2">
+    <button id="btnPass" class="py-3 px-2 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 text-xs font-semibold active:scale-95 transition-all">
+      ≫ Passer
+    </button>
+    <button id="btnCorrect" class="py-3 px-2 rounded-xl bg-slate-800/90 border border-slate-700 text-amber-400 text-xs font-semibold active:scale-95 transition-all flex items-center justify-center gap-1">
+      <span>⌫</span> Corriger
+    </button>
+    <button id="btnValidate" class="py-3 px-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold shadow-lg shadow-teal-950/50 active:scale-95 transition-all">
+      ✓ Valider
+    </button>
+  </footer>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+    }
+
+    const haptic = (type) => {
+      if (!tg?.HapticFeedback) return;
+      if (type === 'success' || type === 'warning' || type === 'error') {
+        tg.HapticFeedback.notificationOccurred(type);
+      } else {
+        tg.HapticFeedback.impactOccurred(type);
+      }
+    };
+
+    const curriculum = [
+      {
+        id: "chunk_001",
+        phrase: "Salut ! Un p'tit déca, s'te plaît.",
+        phonetic: "/sa.ly ɛ̃ pti de.ka stə plɛ/",
+        translation: "Привет! Маленький декаф, пожалуйста.",
+        colloquial: "Стяжение 's'il te plaît' в 's'te plaît', редукция 'petit' в 'p'tit'. Живая парижская норма у стойки.",
+        contextRu: "Заказ у стойки парижского бистро",
+        image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "chunk_002",
+        phrase: "Je suis un peu à la bourre ce matin.",
+        phonetic: "/ʒə sɥi œ̃ pø a la buʁ sə ma.tɛ̃/",
+        translation: "Я немного опаздываю этим утром.",
+        colloquial: "Выражение «être à la bourre» — самое частое в Лионе и Париже для слова «опаздывать» (вместо книжного «être en retard»).",
+        contextRu: "В салоне утреннего такси",
+        image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "chunk_003",
+        phrase: "Laisse tomber, c'est pas grave.",
+        phonetic: "/lɛs tɔ̃.be sɛ pa ɡʁav/",
+        translation: "Забей / брось, ничего страшного.",
+        colloquial: "Оборот «laisse tomber» в паре с выпадением отрицательной частицы «ne» (c'est pas вместо ce n'est pas).",
+        contextRu: "Короткий диалог с коллегой",
+        image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+
+    let currentIndex = 0;
+    const cardContainer = document.getElementById('cardContainer');
+    const userInput = document.getElementById('userInput');
+
+    function renderCard(index) {
+      const item = curriculum[index];
+      document.getElementById('cardProgress').textContent = `0${index + 1} / 0${curriculum.length}`;
+      document.getElementById('sceneImage').src = item.image;
+      document.getElementById('sceneContextRu').textContent = item.contextRu;
+      document.getElementById('targetPhrase').textContent = `"${item.phrase}"`;
+      document.getElementById('targetPhonetic').textContent = item.phonetic;
+      document.getElementById('backTranslation').textContent = item.translation;
+      document.getElementById('backColloquial').textContent = item.colloquial;
+      userInput.value = '';
+      cardContainer.classList.remove('card-flipped');
+    }
+
+    document.getElementById('btnListen').addEventListener('click', () => {
+      haptic('light');
+      const text = curriculum[currentIndex].phrase;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'fr-FR';
+        utterance.rate = 0.92;
+        window.speechSynthesis.speak(utterance);
+      }
+    });
+
+    const btnRecord = document.getElementById('btnRecord');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'fr-FR';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      btnRecord.addEventListener('click', () => {
+        haptic('medium');
+        btnRecord.classList.add('bg-teal-500/20', 'text-teal-300');
+        recognition.start();
+      });
+
+      recognition.onresult = (event) => {
+        btnRecord.classList.remove('bg-teal-500/20', 'text-teal-300');
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        haptic('light');
+        validateAnswer();
+      };
+
+      recognition.onerror = () => {
+        btnRecord.classList.remove('bg-teal-500/20', 'text-teal-300');
+        haptic('warning');
+      };
+      recognition.onend = () => {
+        btnRecord.classList.remove('bg-teal-500/20', 'text-teal-300');
+      };
+    } else {
+      btnRecord.addEventListener('click', () => {
+        haptic('warning');
+      });
+    }
+
+    function clean(str) {
+      return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?]/g, "").trim();
+    }
+
+    function validateAnswer() {
+      const target = clean(curriculum[currentIndex].phrase);
+      const user = clean(userInput.value);
+
+      if (user === target) {
+        haptic('success');
+        userInput.classList.add('border-emerald-400', 'bg-emerald-950/20');
+        setTimeout(() => {
+          userInput.classList.remove('border-emerald-400', 'bg-emerald-950/20');
+          currentIndex = (currentIndex + 1) % curriculum.length;
+          renderCard(currentIndex);
+        }, 800);
+      } else {
+        haptic('error');
+        cardContainer.classList.add('shiver');
+        setTimeout(() => cardContainer.classList.remove('shiver'), 400);
+      }
+    }
+
+    document.getElementById('btnValidate').addEventListener('click', validateAnswer);
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') validateAnswer();
+    });
+
+    document.getElementById('btnCorrect').addEventListener('click', () => {
+      haptic('light');
+      const words = userInput.value.trim().split(' ');
+      words.pop();
+      userInput.value = words.length > 0 ? words.join(' ') + ' ' : '';
+      userInput.focus();
+    });
+
+    document.getElementById('btnPass').addEventListener('click', () => {
+      haptic('medium');
+      cardContainer.classList.toggle('card-flipped');
+    });
+
+    document.getElementById('btnFlipBack').addEventListener('click', () => {
+      haptic('light');
+      cardContainer.classList.remove('card-flipped');
+    });
+
+    renderCard(0);
+  </script>
+</body>
+</html>
