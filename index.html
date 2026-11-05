@@ -58,11 +58,18 @@
       60% { transform: translateX(-3px); }
       80% { transform: translateX(3px); }
     }
+    .recording-pulse {
+      animation: micPulse 1.2s infinite ease-in-out;
+    }
+    @keyframes micPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      50% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    }
   </style>
 </head>
 <body class="bg-[#0B0F17] text-slate-100 min-h-screen flex flex-col justify-between p-4 antialiased select-none overflow-x-hidden">
 
-  <!-- Шапка приложения -->
+  <!-- Шапка -->
   <header class="flex items-center justify-between py-2 border-b border-slate-800/80">
     <div class="flex items-center gap-2">
       <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
@@ -73,7 +80,7 @@
     </div>
   </header>
 
-  <!-- Интерактивная 3D-карточка -->
+  <!-- Интерактивная карточка -->
   <main class="flex-1 flex flex-col justify-center my-auto py-3 perspective-1000">
     <div id="cardContainer" class="card-inner relative w-full max-w-sm mx-auto h-[480px]">
       
@@ -109,15 +116,15 @@
           </div>
         </div>
 
-        <!-- Поле ввода и микрофон -->
+        <!-- Поле ввода и обновленный микрофон -->
         <div class="relative w-full flex items-center gap-2">
           <input 
             id="userInput"
             type="text" 
-            placeholder="Повторите голосом или напишите..."
+            placeholder="Нажмите на микрофон и говорите..."
             class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition-colors"
           />
-          <button id="btnRecord" class="w-12 h-11 rounded-xl bg-slate-800 border border-slate-700 text-teal-400 flex items-center justify-center active:scale-90 transition-transform">
+          <button id="btnRecord" class="w-12 h-11 rounded-xl bg-slate-800 border border-slate-700 text-teal-400 flex items-center justify-center active:scale-95 transition-all flex-shrink-0">
             <svg id="micIcon" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
             </svg>
@@ -126,7 +133,7 @@
 
       </div>
 
-      <!-- Тыльная сторона карточки -->
+      <!-- Тыльная сторона -->
       <div class="card-back absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-teal-500/40 p-6 flex flex-col justify-between shadow-2xl">
         <div>
           <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Смысловой перевод</span>
@@ -236,39 +243,73 @@
       }
     });
 
+    // Улучшенный модуль микрофона (живой поток без обрыва)
     const btnRecord = document.getElementById('btnRecord');
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'fr-FR';
-      recognition.continuous = false;
-      recognition.interimResults = false;
+    let isRecording = false;
+    let recognition = null;
 
-      btnRecord.addEventListener('click', () => {
-        haptic('medium');
-        btnRecord.classList.add('bg-teal-500/20', 'text-teal-300');
-        recognition.start();
-      });
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'fr-FR';
+      recognition.continuous = true;       // Слушать непрерывно, не обрывая на полуслове
+      recognition.interimResults = true;  // Выводить слова прямо в процессе речи
+
+      recognition.onstart = () => {
+        isRecording = true;
+        btnRecord.classList.remove('bg-slate-800', 'text-teal-400', 'border-slate-700');
+        btnRecord.classList.add('bg-red-500', 'text-white', 'border-red-400', 'recording-pulse');
+        userInput.placeholder = "Слушаю вас...";
+      };
 
       recognition.onresult = (event) => {
-        btnRecord.classList.remove('bg-teal-500/20', 'text-teal-300');
-        const transcript = event.results[0][0].transcript;
-        userInput.value = transcript;
-        haptic('light');
-        validateAnswer();
+        let currentTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          currentTranscript += event.results[i][0].transcript;
+        }
+        if (currentTranscript.trim()) {
+          userInput.value = currentTranscript;
+        }
       };
 
       recognition.onerror = () => {
-        btnRecord.classList.remove('bg-teal-500/20', 'text-teal-300');
+        stopRecording();
         haptic('warning');
       };
+
       recognition.onend = () => {
-        btnRecord.classList.remove('bg-teal-500/20', 'text-teal-300');
+        stopRecording();
       };
+
+      function stopRecording() {
+        if (!isRecording) return;
+        isRecording = false;
+        btnRecord.classList.remove('bg-red-500', 'text-white', 'border-red-400', 'recording-pulse');
+        btnRecord.classList.add('bg-slate-800', 'text-teal-400', 'border-slate-700');
+        userInput.placeholder = "Нажмите на микрофон и говорите...";
+        haptic('medium');
+      }
+
+      btnRecord.addEventListener('click', () => {
+        if (isRecording) {
+          recognition.stop();
+          stopRecording();
+        } else {
+          userInput.value = '';
+          haptic('impact');
+          try {
+            recognition.start();
+          } catch(e) {
+            recognition.stop();
+          }
+        }
+      });
+
     } else {
       btnRecord.addEventListener('click', () => {
         haptic('warning');
+        alert("Встроенный микрофон не поддерживается данным браузером.");
       });
     }
 
@@ -277,6 +318,9 @@
     }
 
     function validateAnswer() {
+      if (isRecording && recognition) {
+        recognition.stop();
+      }
       const target = clean(curriculum[currentIndex].phrase);
       const user = clean(userInput.value);
 
