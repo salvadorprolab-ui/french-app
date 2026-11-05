@@ -232,35 +232,41 @@
       cardContainer.classList.remove('card-flipped');
     }
 
-    // Загрузка и принудительный выбор французского голоса из памяти системы
-    let systemVoices = [];
-    function initVoices() {
-      if ('speechSynthesis' in window) {
-        systemVoices = window.speechSynthesis.getVoices();
-      }
-    }
-    initVoices();
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = initVoices;
-    }
+    // Аудиоканал для захвата фокуса у Telegram WebView
+    let audioCtx = null;
+    window.currentUtterance = null; // Защита от очистки памяти Android
 
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
-      const text = curriculum[currentIndex].phrase;
+
+      // 1. Активируем аудиоканал
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (e) {}
+
+      // 2. Воспроизведение через системный синтез речи
       if ('speechSynthesis' in window) {
-        // Разбудить аудиоканал (критично для Android WebView)
+        window.speechSynthesis.cancel();
         window.speechSynthesis.resume();
 
+        const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
         utterance.rate = 0.92;
 
-        // Явный поиск французского голоса в списке системы
-        if (systemVoices.length === 0) systemVoices = window.speechSynthesis.getVoices();
-        const frenchVoice = systemVoices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
+        const voices = window.speechSynthesis.getVoices();
+        const frenchVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
         if (frenchVoice) {
           utterance.voice = frenchVoice;
         }
+
+        // Сохраняем ссылку глобально, чтобы Android не глушил звук
+        window.currentUtterance = utterance;
 
         window.speechSynthesis.speak(utterance);
       }
@@ -332,7 +338,6 @@
     } else {
       btnRecord.addEventListener('click', () => {
         haptic('warning');
-        alert("Встроенный микрофон не поддерживается данным браузером.");
       });
     }
 
