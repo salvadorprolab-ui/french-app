@@ -312,10 +312,14 @@
 
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
-        // Повторный клик: корректно глушим запись
-        stopAllRecording();
-        return;
-      }
+     // Повторный клик: корректно глушим запись
+     if (!HasSpeechRec) {
+       userInput.value = curriculum[currentIndex].phrase;
+       haptic('success');
+     }
+     stopAllRecording();
+     return;
+   }
 
       // Первый клик: инициализация чистого потока
       userInput.value = '';
