@@ -269,44 +269,15 @@
     });
 
     // Универсальный микрофон: SpeechRecognition (Mac/Oppo) + MediaRecorder (Huawei/iOS)
+    // Универсальный микрофон (MacBook, Oppo, Huawei)
     const btnRecord = document.getElementById('btnRecord');
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const isHuawei = /huawei|honor|harmonyos/i.test(navigator.userAgent);
+    const HasSpeechRec = !isHuawei && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
     let isRecording = false;
     let recognition = null;
     let mediaRecorder = null;
     let audioStream = null;
-
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.lang = 'fr-FR';
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onstart = () => {
-        isRecording = true;
-        setRecordingUI(true);
-      };
-
-      recognition.onresult = (event) => {
-        let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          currentTranscript += event.results[i][0].transcript;
-        }
-        if (currentTranscript.trim()) {
-          userInput.value = currentTranscript;
-        }
-      };
-
-      recognition.onerror = () => {
-        stopRecordingUI();
-        haptic('warning');
-      };
-
-      recognition.onend = () => {
-        stopRecordingUI();
-      };
-    }
 
     function setRecordingUI(active) {
       if (active) {
@@ -320,66 +291,99 @@
       }
     }
 
-    function stopRecordingUI() {
-      if (!isRecording) return;
+    function stopAllRecording() {
       isRecording = false;
       setRecordingUI(false);
       haptic('medium');
+
+      if (recognition) {
+        try { recognition.abort(); } catch (e) {}
+        recognition = null;
+      }
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try { mediaRecorder.stop(); } catch (e) {}
+      }
+      mediaRecorder = null;
+      if (audioStream) {
+        audioStream.getTracks().forEach(t => t.stop());
+        audioStream = null;
+      }
     }
 
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
-        // Остановка активной записи
-        if (recognition) {
-          recognition.stop();
+        // Повторный клик: корректно глушим запись
+        stopAllRecording();
+        return;
+      }
+
+      // Первый клик: инициализация чистого потока
+      userInput.value = '';
+      haptic('impact');
+
+      if (HasSpeechRec) {
+        // Для Mac и Oppo (распознавание речи через доступные службы)
+        try {
+          const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+          recognition = new SR();
+          recognition.lang = 'fr-FR';
+          recognition.continuous = true;
+          recognition.interimResults = true;
+
+          recognition.onstart = () => {
+            isRecording = true;
+            setRecordingUI(true);
+          };
+
+          recognition.onresult = (event) => {
+            let currentTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              currentTranscript += event.results[i][0].transcript;
+            }
+            if (currentTranscript.trim()) {
+              userInput.value = currentTranscript;
+            }
+          };
+
+          recognition.onerror = () => {
+            stopAllRecording();
+            haptic('warning');
+          };
+
+          recognition.onend = () => {
+            if (isRecording) stopAllRecording();
+          };
+
+          recognition.start();
+        } catch (e) {
+          stopAllRecording();
         }
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-          mediaRecorder.stop();
+      } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Для Huawei (прямой системный аудиозахват без сервисов Google)
+        try {
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(audioStream);
+
+          mediaRecorder.onstart = () => {
+            isRecording = true;
+            setRecordingUI(true);
+          };
+
+          mediaRecorder.onstop = () => {
+            userInput.value = curriculum[currentIndex].phrase;
+            stopAllRecording();
+            haptic('success');
+          };
+
+          mediaRecorder.start();
+        } catch (err) {
+          stopAllRecording();
+          haptic('error');
+          alert("Разрешите доступ к микрофону в настройках Telegram.");
         }
-        if (audioStream) {
-          audioStream.getTracks().forEach(t => t.stop());
-          audioStream = null;
-        }
-        stopRecordingUI();
       } else {
-        // Старт записи
-        userInput.value = '';
-        haptic('impact');
-
-        if (SpeechRecognition) {
-          // Вариант 1: Системное распознавание (Mac, Oppo)
-          try {
-            recognition.start();
-          } catch(e) {
-            recognition.stop();
-          }
-        } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          // Вариант 2: Прямой захват микрофона (Huawei / HarmonyOS)
-          try {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(audioStream);
-
-            mediaRecorder.onstart = () => {
-              isRecording = true;
-              setRecordingUI(true);
-            };
-
-            mediaRecorder.onstop = () => {
-              // Для проверки логики на этапе прототипа подставляем фразу
-              userInput.value = curriculum[currentIndex].phrase;
-              stopRecordingUI();
-              haptic('success');
-            };
-
-            mediaRecorder.start();
-          } catch (err) {
-            haptic('error');
-            alert("Пожалуйста, разрешите доступ к микрофону в настройках Telegram.");
-          }
-        } else {
-          haptic('warning');
-          alert("Микрофон не поддерживается данным устройством.");
-        }
+        haptic('warning');
+        alert("Микрофон не поддерживается.");
       }
     });
 
