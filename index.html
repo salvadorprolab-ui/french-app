@@ -282,13 +282,17 @@
         const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
-        utterance.rate = currentRate;
 
         const voices = window.speechSynthesis.getVoices();
         const frenchVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
-        if (frenchVoice) {
+
+        // На Huawei назначение объекта voice сбрасывает скорость в профиле Celia TTS
+        if (frenchVoice && !isHuawei) {
           utterance.voice = frenchVoice;
         }
+
+        // Для Huawei округляем скорость до одного знака (Celia не принимает сотые доли)
+        utterance.rate = isHuawei ? Math.round(currentRate * 10) / 10 : currentRate;
 
         window.currentUtterance = utterance;
         window.speechSynthesis.speak(utterance);
