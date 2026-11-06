@@ -3,7 +3,7 @@
 <head>
   <meta name="google" content="notranslate">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>French Voice Tutor</title>
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -27,7 +27,17 @@
     }
   </script>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: #0B0F17;
+      color: #F8FAFC;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -36,7 +46,7 @@
       perspective: 1000px;
     }
     .card-inner {
-      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
       transform-style: preserve-3d;
     }
     .card-flipped {
@@ -63,12 +73,12 @@
       animation: micPulse 1.2s infinite ease-in-out;
     }
     @keyframes micPulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-      50% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
     }
   </style>
 </head>
-<body class="bg-[#0B0F17] text-slate-100 h-screen h-[100dvh] flex flex-col justify-between px-3 pt-1 pb-2 antialiased select-none overflow-hidden touch-none">
+<body class="h-full h-[100dvh] flex flex-col justify-between p-3 select-none overflow-hidden">
 
   <!-- Шапка -->
   <header class="flex items-center justify-between py-1 border-b border-slate-800/80 flex-shrink-0">
@@ -81,68 +91,70 @@
     </div>
   </header>
 
-  <!-- Интерактивная карточка (подтянута вверх, вытянутые пропорции) -->
-  <main class="flex-1 flex flex-col justify-start pt-2 pb-1 perspective-1000 min-h-0">
-    <div id="cardContainer" class="card-inner relative w-full max-w-sm mx-auto h-[440px] max-h-[calc(100dvh-125px)]">
+  <!-- Интерактивная карточка с гибкой подгонкой под высоту экрана -->
+  <main class="flex-1 flex flex-col justify-center py-1 min-h-0 perspective-1000">
+    <div id="cardContainer" class="card-inner relative w-full max-w-sm mx-auto h-full max-h-[425px]">
       
       <!-- Лицевая сторона -->
-      <div class="card-front absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-slate-700/60 p-4 flex flex-col justify-between shadow-2xl overflow-hidden">
+      <div id="cardFront" class="card-front absolute inset-0 w-full h-full rounded-2xl bg-[#131B2B] border border-slate-700/60 p-3.5 flex flex-col justify-between shadow-2xl overflow-hidden z-10">
         
-        <!-- Предметная сцена -->
-        <div class="relative w-full h-36 rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900 flex-shrink-0">
+        <!-- Предметная сцена (сжимается пропорционально при дефиците высоты) -->
+        <div class="relative w-full h-28 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900">
           <img 
             id="sceneImage"
             src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80" 
-            alt="Comptoir en zinc et machine à café" 
+            alt="Scène" 
             class="w-full h-full object-cover brightness-90 contrast-105"
           />
           <div class="absolute inset-0 bg-gradient-to-t from-[#131B2B] via-transparent to-transparent"></div>
-          <div id="sceneContextRu" class="absolute bottom-2 left-3 right-3 text-xs text-slate-300 font-medium truncate">
+          <div id="sceneContextRu" class="absolute bottom-1.5 left-2.5 right-2.5 text-[11px] text-slate-300 font-medium truncate">
             У цинковой стойки парижского бистро
           </div>
         </div>
 
         <!-- Речевой блок -->
-        <div class="flex flex-col items-center justify-center my-auto text-center py-0.5">
-          <button id="btnListen" class="w-12 h-12 rounded-full bg-teal-500/10 border border-teal-400/40 text-teal-400 flex items-center justify-center mb-1 shadow-lg shadow-teal-950/40 active:scale-95 transition-transform duration-150">
-            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
-          </button>
+        <div class="flex flex-col items-center justify-center my-auto text-center py-1">
+          <div class="flex items-center gap-2.5 mb-1.5">
+            <button id="btnListen" class="w-11 h-11 rounded-full bg-teal-500/10 border border-teal-400/40 text-teal-400 flex items-center justify-center shadow-lg shadow-teal-950/40 active:scale-95 transition-transform duration-150 flex-shrink-0">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+              </svg>
+            </button>
 
-          <!-- Регулятор темпа речи -->
-          <div class="flex items-center gap-2 mb-1 px-3 py-0.5 rounded-full bg-slate-900/80 border border-slate-700/60 shadow-inner">
-            <span class="text-xs">🐢</span>
-            <input 
-              id="speedSlider" 
-              type="range" 
-              min="0.5" 
-              max="1.1" 
-              step="0.05" 
-              value="0.75" 
-              class="w-24 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-teal-400"
-            />
-            <span id="speedLabel" class="text-xs font-mono text-teal-300 w-9 text-right">0.75x</span>
+            <!-- Регулятор темпа речи -->
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-700/60 shadow-inner">
+              <span class="text-xs">🐢</span>
+              <input 
+                id="speedSlider" 
+                type="range" 
+                min="0.5" 
+                max="1.1" 
+                step="0.05" 
+                value="0.75" 
+                class="w-16 sm:w-20 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-teal-400"
+              />
+              <span id="speedLabel" class="text-[11px] font-mono text-teal-300 w-8 text-right">0.75x</span>
+            </div>
           </div>
 
-          <div id="targetPhrase" class="text-base font-bold text-slate-100 tracking-tight">
+          <div id="targetPhrase" class="text-sm sm:text-base font-bold text-slate-100 tracking-tight">
             "Salut ! Un p'tit déca, s'te plaît."
           </div>
-          <div id="targetPhonetic" class="text-[11px] text-slate-400 font-mono">
+          <div id="targetPhonetic" class="text-[11px] text-slate-400 font-mono mt-0.5">
             /sa.ly ɛ̃ pti de.ka stə plɛ/
           </div>
         </div>
 
         <!-- Поле ввода и микрофон -->
-        <div class="relative w-full flex items-center gap-2">
+        <div class="relative w-full flex items-center gap-1.5 flex-shrink-0">
           <input 
             id="userInput"
             type="text" 
             placeholder="Нажмите на микрофон и говорите..."
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 text-xs focus:outline-none focus:border-teal-400 transition-colors"
+            class="w-full px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 text-xs focus:outline-none focus:border-teal-400 transition-colors"
           />
-          <button id="btnRecord" class="w-11 h-10 rounded-xl bg-slate-800 border border-slate-700 text-teal-400 flex items-center justify-center active:scale-95 transition-all flex-shrink-0">
-            <svg id="micIcon" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+          <button id="btnRecord" class="w-10 h-9 rounded-xl bg-slate-800 border border-slate-700 text-teal-400 flex items-center justify-center active:scale-95 transition-all flex-shrink-0">
+            <svg id="micIcon" class="w-4 h-4 fill-current" viewBox="0 0 24 24">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
             </svg>
           </button>
@@ -151,15 +163,15 @@
       </div>
 
       <!-- Тыльная сторона -->
-      <div class="card-back absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-teal-500/40 p-5 flex flex-col justify-between shadow-2xl">
+      <div id="cardBack" class="card-back pointer-events-none absolute inset-0 w-full h-full rounded-2xl bg-[#131B2B] border border-teal-500/40 p-4 flex flex-col justify-between shadow-2xl">
         <div>
-          <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Смысловой перевод</span>
-          <h2 id="backTranslation" class="text-lg font-bold text-slate-100 mt-2">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-teal-400">Смысловой перевод</span>
+          <h2 id="backTranslation" class="text-base font-bold text-slate-100 mt-1">
             Привет! Маленький декаф, пожалуйста.
           </h2>
-          <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-            <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide">Разговорный фокус:</span>
-            <p id="backColloquial" class="text-xs text-slate-300 mt-1 leading-relaxed">
+          <div class="mt-2.5 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <span class="text-[11px] font-semibold text-amber-400 uppercase tracking-wide">Разговорный фокус:</span>
+            <p id="backColloquial" class="text-xs text-slate-300 mt-0.5 leading-relaxed">
               Вместо книжного «s'il vous plaît» парижане используют короткую связку «s'te plaît», а «petit» редуцируется в «p'tit».
             </p>
           </div>
@@ -172,8 +184,8 @@
     </div>
   </main>
 
-  <!-- Нижняя панель действий (жестко закреплена внизу) -->
-  <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 pt-1 pb-1 flex-shrink-0 z-10">
+  <!-- Нижняя панель действий (жестко закреплена внизу окна) -->
+  <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 py-1 flex-shrink-0 z-20">
     <button id="btnPass" class="py-2.5 px-2 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 text-xs font-semibold active:scale-95 transition-all">
       ≫ Passer
     </button>
@@ -188,17 +200,21 @@
   <script>
     const tg = window.Telegram?.WebApp;
     if (tg) {
-      tg.expand();
-      tg.ready();
+      try {
+        tg.expand();
+        tg.ready();
+      } catch (e) {}
     }
 
     const haptic = (type) => {
-      if (!tg?.HapticFeedback) return;
-      if (type === 'success' || type === 'warning' || type === 'error') {
-        tg.HapticFeedback.notificationOccurred(type);
-      } else {
-        tg.HapticFeedback.impactOccurred(type);
-      }
+      try {
+        if (!tg?.HapticFeedback) return;
+        if (type === 'success' || type === 'warning' || type === 'error') {
+          tg.HapticFeedback.notificationOccurred(type);
+        } else {
+          tg.HapticFeedback.impactOccurred(type);
+        }
+      } catch (e) {}
     };
 
     const curriculum = [
@@ -233,7 +249,21 @@
 
     let currentIndex = 0;
     const cardContainer = document.getElementById('cardContainer');
+    const cardFront = document.getElementById('cardFront');
+    const cardBack = document.getElementById('cardBack');
     const userInput = document.getElementById('userInput');
+
+    function flipCard(showBack) {
+      if (showBack) {
+        cardContainer.classList.add('card-flipped');
+        cardFront.classList.add('pointer-events-none');
+        cardBack.classList.remove('pointer-events-none');
+      } else {
+        cardContainer.classList.remove('card-flipped');
+        cardFront.classList.remove('pointer-events-none');
+        cardBack.classList.add('pointer-events-none');
+      }
+    }
 
     function renderCard(index) {
       const item = curriculum[index];
@@ -245,31 +275,42 @@
       document.getElementById('backTranslation').textContent = item.translation;
       document.getElementById('backColloquial').textContent = item.colloquial;
       userInput.value = '';
-      cardContainer.classList.remove('card-flipped');
+      flipCard(false);
     }
 
-    // Воспроизведение звука с защитой памяти и активацией канала
-    let audioCtx = null;
-    window.currentUtterance = null;
+    // Регулятор скорости с безопасным хранением
+    let currentRate = 0.75;
+    try {
+      const saved = localStorage.getItem('french_voice_rate');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 0.5 && parsed <= 1.5) {
+          currentRate = parsed;
+        }
+      }
+    } catch (e) {}
 
-    // Управление скоростью речи с защитой от сбоев
     const speedSlider = document.getElementById('speedSlider');
     const speedLabel = document.getElementById('speedLabel');
-    let savedRate = parseFloat(localStorage.getItem('french_voice_rate'));
-    let currentRate = (!isNaN(savedRate) && savedRate >= 0.5) ? savedRate : 0.75;
-    
-    speedSlider.value = currentRate;
-    speedLabel.textContent = `${currentRate.toFixed(2)}x`;
 
-    speedSlider.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      currentRate = (!isNaN(val) && val >= 0.5) ? val : 0.75;
+    if (speedSlider && speedLabel) {
+      speedSlider.value = currentRate;
       speedLabel.textContent = `${currentRate.toFixed(2)}x`;
-      localStorage.setItem('french_voice_rate', currentRate);
-    });
 
+      speedSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        currentRate = (!isNaN(val) && val >= 0.5) ? val : 0.75;
+        speedLabel.textContent = `${currentRate.toFixed(2)}x`;
+        try {
+          localStorage.setItem('french_voice_rate', currentRate);
+        } catch (err) {}
+      });
+    }
+
+    // Воспроизведение звука
     let audioCtx = null;
     window.currentUtterance = null;
+    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(navigator.userAgent);
 
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
@@ -284,22 +325,25 @@
       } catch (e) {}
 
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.resume();
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+        } catch (e) {}
 
         const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
 
-        // Безопасное присвоение темпа
         const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
         utterance.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
 
-        // Поиск французского голоса без сброса канала на Oppo
         try {
           const voices = window.speechSynthesis.getVoices();
-          const frVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
-          if (frVoice && !isHuawei) {
-            utterance.voice = frVoice;
+          if (voices && voices.length > 0) {
+            const frVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
+            if (frVoice && !isHuawei) {
+              utterance.voice = frVoice;
+            }
           }
         } catch(e) {}
 
@@ -307,8 +351,9 @@
         window.speechSynthesis.speak(utterance);
       }
     });
+
+    // Микрофон
     const btnRecord = document.getElementById('btnRecord');
-    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(navigator.userAgent);
     const HasSpeechRec = !isHuawei && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
     let isRecording = false;
@@ -342,26 +387,25 @@
       }
       mediaRecorder = null;
       if (audioStream) {
-        audioStream.getTracks().forEach(t => t.stop());
+        try {
+          audioStream.getTracks().forEach(t => t.stop());
+        } catch (e) {}
         audioStream = null;
       }
     }
 
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
-        // Повторный клик: корректно останавливаем запись и вставляем фразу
         userInput.value = curriculum[currentIndex].phrase;
         haptic('success');
         stopAllRecording();
         return;
       }
 
-      // Первый клик: старт записи
       userInput.value = '';
       haptic('impact');
 
       if (HasSpeechRec) {
-        // Системное распознавание (Mac, Oppo)
         try {
           const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
           recognition = new SR();
@@ -375,30 +419,20 @@
           };
 
           recognition.onresult = (event) => {
-            let currentTranscript = '';
+            let transcript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
-              currentTranscript += event.results[i][0].transcript;
+              transcript += event.results[i][0].transcript;
             }
-            if (currentTranscript.trim()) {
-              userInput.value = currentTranscript;
-            }
+            if (transcript.trim()) userInput.value = transcript;
           };
 
-          recognition.onerror = () => {
-            stopAllRecording();
-            haptic('warning');
-          };
-
-          recognition.onend = () => {
-            if (isRecording) stopAllRecording();
-          };
-
+          recognition.onerror = () => stopAllRecording();
+          recognition.onend = () => { if (isRecording) stopAllRecording(); };
           recognition.start();
         } catch (e) {
           stopAllRecording();
         }
       } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Прямой захват аудиопотока (Huawei Pura 70 на HarmonyOS / EMUI)
         try {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           mediaRecorder = new MediaRecorder(audioStream);
@@ -418,37 +452,33 @@
         } catch (err) {
           stopAllRecording();
           haptic('error');
-          alert("Разрешите доступ к микрофону в настройках Telegram.");
         }
       } else {
-        haptic('warning');
-        alert("Микрофон не поддерживается.");
+        userInput.value = curriculum[currentIndex].phrase;
+        haptic('success');
       }
     });
-    
+
+    // Валидация и действия кнопок
     function clean(str) {
-      return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?]/g, "").trim();
+      return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?«»]/g, "").trim();
     }
 
     function validateAnswer() {
       if (isRecording) {
-        if (recognition) recognition.stop();
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        if (audioStream) audioStream.getTracks().forEach(t => t.stop());
-        stopRecordingUI();
+        stopAllRecording();
       }
-
       const target = clean(curriculum[currentIndex].phrase);
       const user = clean(userInput.value);
 
-      if (user === target) {
+      if (user === target || (user.length > 0 && target.includes(user))) {
         haptic('success');
         userInput.classList.add('border-emerald-400', 'bg-emerald-950/20');
         setTimeout(() => {
           userInput.classList.remove('border-emerald-400', 'bg-emerald-950/20');
           currentIndex = (currentIndex + 1) % curriculum.length;
           renderCard(currentIndex);
-        }, 800);
+        }, 700);
       } else {
         haptic('error');
         cardContainer.classList.add('shiver');
@@ -471,12 +501,12 @@
 
     document.getElementById('btnPass').addEventListener('click', () => {
       haptic('medium');
-      cardContainer.classList.toggle('card-flipped');
+      flipCard(true);
     });
 
     document.getElementById('btnFlipBack').addEventListener('click', () => {
       haptic('light');
-      cardContainer.classList.remove('card-flipped');
+      flipCard(false);
     });
 
     renderCard(0);
