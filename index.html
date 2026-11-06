@@ -68,9 +68,10 @@
     }
   </style>
 </head>
-<body class="bg-[#0B0F17] text-slate-100 h-screen h-[100dvh] flex flex-col justify-between px-4 py-2 antialiased select-none overflow-hidden touch-none">
+<body class="bg-[#0B0F17] text-slate-100 h-screen h-[100dvh] flex flex-col justify-between px-3 pt-1 pb-2 antialiased select-none overflow-hidden touch-none">
+
   <!-- Шапка -->
-  <header class="flex items-center justify-between py-2 border-b border-slate-800/80">
+  <header class="flex items-center justify-between py-1 border-b border-slate-800/80 flex-shrink-0">
     <div class="flex items-center gap-2">
       <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
       <span class="text-xs uppercase tracking-widest font-semibold text-slate-400">Paris • Métro Bastille</span>
@@ -80,15 +81,15 @@
     </div>
   </header>
 
-  <!-- Интерактивная карточка -->
-  <main class="flex-1 flex flex-col justify-center my-auto py-3 perspective-1000">
-    <div id="cardContainer" class="card-inner relative w-full max-w-sm mx-auto h-[395px]">
+  <!-- Интерактивная карточка (подтянута вверх, вытянутые пропорции) -->
+  <main class="flex-1 flex flex-col justify-start pt-2 pb-1 perspective-1000 min-h-0">
+    <div id="cardContainer" class="card-inner relative w-full max-w-sm mx-auto h-[440px] max-h-[calc(100dvh-125px)]">
       
       <!-- Лицевая сторона -->
-  <div class="card-front absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-slate-700/60 p-3.5 flex flex-col justify-between shadow-2xl overflow-hidden">
-    
-    <!-- Предметная сцена -->
-    <div class="relative w-full h-28 rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900 flex-shrink-0">
+      <div class="card-front absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-slate-700/60 p-4 flex flex-col justify-between shadow-2xl overflow-hidden">
+        
+        <!-- Предметная сцена -->
+        <div class="relative w-full h-36 rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900 flex-shrink-0">
           <img 
             id="sceneImage"
             src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80" 
@@ -102,14 +103,15 @@
         </div>
 
         <!-- Речевой блок -->
-        <div class="flex flex-col items-center justify-center my-auto text-center py-1">
-          <button id="btnListen" class="w-11 h-11 rounded-full bg-teal-500/10 border border-teal-400/40 text-teal-400 flex items-center justify-center mb-1 shadow-lg shadow-teal-950/40 active:scale-95 transition-transform duration-150">
-            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+        <div class="flex flex-col items-center justify-center my-auto text-center py-0.5">
+          <button id="btnListen" class="w-12 h-12 rounded-full bg-teal-500/10 border border-teal-400/40 text-teal-400 flex items-center justify-center mb-1 shadow-lg shadow-teal-950/40 active:scale-95 transition-transform duration-150">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
               <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
             </svg>
           </button>
+
           <!-- Регулятор темпа речи -->
-          <div class="flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-700/60 shadow-inner">
+          <div class="flex items-center gap-2 mb-1 px-3 py-0.5 rounded-full bg-slate-900/80 border border-slate-700/60 shadow-inner">
             <span class="text-xs">🐢</span>
             <input 
               id="speedSlider" 
@@ -122,10 +124,11 @@
             />
             <span id="speedLabel" class="text-xs font-mono text-teal-300 w-9 text-right">0.75x</span>
           </div>
-          <div id="targetPhrase" class="text-lg font-bold text-slate-100 tracking-tight">
+
+          <div id="targetPhrase" class="text-base font-bold text-slate-100 tracking-tight">
             "Salut ! Un p'tit déca, s'te plaît."
           </div>
-          <div id="targetPhonetic" class="text-xs text-slate-400 font-mono mt-0.5">
+          <div id="targetPhonetic" class="text-[11px] text-slate-400 font-mono">
             /sa.ly ɛ̃ pti de.ka stə plɛ/
           </div>
         </div>
@@ -136,9 +139,9 @@
             id="userInput"
             type="text" 
             placeholder="Нажмите на микрофон и говорите..."
-            class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition-colors"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 text-xs focus:outline-none focus:border-teal-400 transition-colors"
           />
-          <button id="btnRecord" class="w-12 h-11 rounded-xl bg-slate-800 border border-slate-700 text-teal-400 flex items-center justify-center active:scale-95 transition-all flex-shrink-0">
+          <button id="btnRecord" class="w-11 h-10 rounded-xl bg-slate-800 border border-slate-700 text-teal-400 flex items-center justify-center active:scale-95 transition-all flex-shrink-0">
             <svg id="micIcon" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
             </svg>
@@ -148,20 +151,20 @@
       </div>
 
       <!-- Тыльная сторона -->
-      <div class="card-back absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-teal-500/40 p-6 flex flex-col justify-between shadow-2xl">
+      <div class="card-back absolute inset-0 w-full h-full rounded-3xl bg-[#131B2B] border border-teal-500/40 p-5 flex flex-col justify-between shadow-2xl">
         <div>
           <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Смысловой перевод</span>
-          <h2 id="backTranslation" class="text-xl font-bold text-slate-100 mt-2">
+          <h2 id="backTranslation" class="text-lg font-bold text-slate-100 mt-2">
             Привет! Маленький декаф, пожалуйста.
           </h2>
-          <div class="mt-4 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
             <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide">Разговорный фокус:</span>
             <p id="backColloquial" class="text-xs text-slate-300 mt-1 leading-relaxed">
               Вместо книжного «s'il vous plaît» парижане используют короткую связку «s'te plaît», а «petit» редуцируется в «p'tit».
             </p>
           </div>
         </div>
-        <button id="btnFlipBack" class="w-full py-3 rounded-xl bg-slate-800 text-slate-200 text-sm font-semibold border border-slate-700 active:scale-95 transition-transform">
+        <button id="btnFlipBack" class="w-full py-2.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold border border-slate-700 active:scale-95 transition-transform">
           ← Вернуться к фразе
         </button>
       </div>
@@ -169,8 +172,8 @@
     </div>
   </main>
 
-  <!-- Нижняя панель действий -->
-  <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 pt-1 pb-1">
+  <!-- Нижняя панель действий (жестко закреплена внизу) -->
+  <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 pt-1 pb-1 flex-shrink-0 z-10">
     <button id="btnPass" class="py-2.5 px-2 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 text-xs font-semibold active:scale-95 transition-all">
       ≫ Passer
     </button>
@@ -249,20 +252,25 @@
     let audioCtx = null;
     window.currentUtterance = null;
 
-    // Управление скоростью речи и сохранение выбора пользователя
+    // Управление скоростью речи с защитой от сбоев
     const speedSlider = document.getElementById('speedSlider');
     const speedLabel = document.getElementById('speedLabel');
-    let currentRate = parseFloat(localStorage.getItem('french_voice_rate')) || 0.75;
+    let savedRate = parseFloat(localStorage.getItem('french_voice_rate'));
+    let currentRate = (!isNaN(savedRate) && savedRate >= 0.5) ? savedRate : 0.75;
     
     speedSlider.value = currentRate;
     speedLabel.textContent = `${currentRate.toFixed(2)}x`;
 
     speedSlider.addEventListener('input', (e) => {
-      currentRate = parseFloat(e.target.value);
+      const val = parseFloat(e.target.value);
+      currentRate = (!isNaN(val) && val >= 0.5) ? val : 0.75;
       speedLabel.textContent = `${currentRate.toFixed(2)}x`;
       localStorage.setItem('french_voice_rate', currentRate);
     });
-    
+
+    let audioCtx = null;
+    window.currentUtterance = null;
+
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
 
@@ -276,32 +284,29 @@
       } catch (e) {}
 
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
         window.speechSynthesis.resume();
 
         const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
 
-        const voices = window.speechSynthesis.getVoices();
-        const frenchVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
+        // Безопасное присвоение темпа
+        const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
+        utterance.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
 
-        // На Huawei назначение объекта voice сбрасывает скорость в профиле Celia TTS
-        if (frenchVoice && !isHuawei) {
-          utterance.voice = frenchVoice;
-        }
-
-        // Для Huawei округляем скорость до одного знака (Celia не принимает сотые доли)
-        utterance.rate = isHuawei ? Math.round(currentRate * 10) / 10 : currentRate;
+        // Поиск французского голоса без сброса канала на Oppo
+        try {
+          const voices = window.speechSynthesis.getVoices();
+          const frVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
+          if (frVoice && !isHuawei) {
+            utterance.voice = frVoice;
+          }
+        } catch(e) {}
 
         window.currentUtterance = utterance;
         window.speechSynthesis.speak(utterance);
       }
     });
-
-    // Универсальный микрофон: SpeechRecognition (Mac/Oppo) + MediaRecorder (Huawei/iOS)
-    // Универсальный микрофон (MacBook, Oppo, Huawei)
-    // Универсальный микрофон (MacBook, Oppo, Huawei Pura 70)
     const btnRecord = document.getElementById('btnRecord');
     const isHuawei = /huawei|honor|harmonyos|ady-/i.test(navigator.userAgent);
     const HasSpeechRec = !isHuawei && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
