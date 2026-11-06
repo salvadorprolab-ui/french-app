@@ -310,52 +310,94 @@
       });
     }
 
-    // Определение платформы
-    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(navigator.userAgent);
+    // Отключаем Referer, чтобы внешние аудиопотоки не блокировались ошибкой 403 Forbidden
+    if (!document.querySelector('meta[name="referrer"]')) {
+      const meta = document.createElement('meta');
+      meta.name = 'referrer';
+      meta.content = 'no-referrer';
+      document.head.appendChild(meta);
+    }
+
+    const ua = navigator.userAgent.toLowerCase();
+    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+    const isTelegramApp = Boolean(window.TelegramWebviewProxy || (window.Telegram?.WebApp?.initData && window.Telegram.WebApp.initData.length > 0) || /telegram/i.test(ua));
     const SpeechRec = !isHuawei && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
-    // Воспроизведение звука (прямой системный поток без блокировок)
     let audioCtx = null;
+    let htmlAudio = null;
     window.currentUtterance = null;
 
-    function unlockAudio() {
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-      } catch (e) {}
+    function playStreamAudio(text, rate) {
+      if (htmlAudio) {
+        try { htmlAudio.pause(); } catch(e) {}
+        htmlAudio = null;
+      }
+      const safeRate = (typeof rate === 'number' && !isNaN(rate)) ? rate : 0.75;
+      const primaryUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=' + encodeURIComponent(text);
+      const fallbackUrl = 'https://api.streamelements.com/kappa/v2/speech?voice=Celine&text=' + encodeURIComponent(text);
+
+      htmlAudio = new Audio(primaryUrl);
+      htmlAudio.playbackRate = safeRate;
+      htmlAudio.onerror = () => {
+        htmlAudio = new Audio(fallbackUrl);
+        htmlAudio.playbackRate = safeRate;
+        htmlAudio.play().catch(() => {});
+      };
+      htmlAudio.play().catch(() => {
+        htmlAudio = new Audio(fallbackUrl);
+        htmlAudio.playbackRate = safeRate;
+        htmlAudio.play().catch(() => {});
+      });
     }
 
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
-      unlockAudio();
 
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (e) {}
+
+      const text = curriculum[currentIndex].phrase;
+      const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
+
+      // Внутри Telegram на Android WebView системный TTS заблокирован — играем прямой HTML5-поток
+      if (isAndroid && isTelegramApp) {
+        playStreamAudio(text, safeRate);
+        return;
+      }
+
+      // Для Mac, Huawei и обычного Chrome запускаем системный синтезатор
       if ('speechSynthesis' in window) {
-        // На Android WebView cancel() перед speak() глушит поток — используем только resume()
-        window.speechSynthesis.resume();
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+        } catch (e) {}
 
-        const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
-
-        const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
         utterance.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
 
         try {
           const voices = window.speechSynthesis.getVoices();
           if (voices && voices.length > 0) {
             const frVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
-            if (frVoice && !isHuawei) {
-              utterance.voice = frVoice;
-            }
+            if (frVoice && !isHuawei) utterance.voice = frVoice;
           }
         } catch(e) {}
 
+        let started = false;
+        utterance.onstart = () => { started = true; };
+        utterance.onerror = () => { playStreamAudio(text, safeRate); };
+        setTimeout(() => {
+          if (!started && !isHuawei) playStreamAudio(text, safeRate);
+        }, 300);
+
         window.currentUtterance = utterance;
         window.speechSynthesis.speak(utterance);
+      } else {
+        playStreamAudio(text, safeRate);
       }
     });
 
@@ -530,12 +572,12 @@
       const target = normalizeFrench(curriculum[currentIndex].phrase);
       const user = normalizeFrench(userInput.value);
 
-      // Проверка длины: не менее 55% фразы (защита от зачета по 1 слову)
+      // Проверка длины поднята ровно на 10% (с 0.55 до 0.65)
       const lengthRatio = user.length / Math.max(1, target.length);
       const score = getSimilarity(user, target);
 
-      // Сбалансированный порог 70%
-      if (lengthRatio >= 0.55 && score >= 0.70) {
+      // Порог схожести 76% и обязательный объем фразы от 65% (недосказанное слово не пройдет)
+      if (lengthRatio >= 0.65 && score >= 0.76) {
         haptic('success');
         userInput.classList.add('border-emerald-400', 'bg-emerald-950/20');
         setTimeout(() => {
