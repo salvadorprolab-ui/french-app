@@ -89,7 +89,7 @@
     </div>
   </header>
 
-  <!-- Интерактивная карточка с гибкой подгонкой под высоту экрана -->
+  <!-- Интерактивная карточка -->
   <main class="flex-1 flex flex-col justify-center py-1 min-h-0 perspective-1000">
     <div id="cardContainer" class="card-inner relative w-full max-w-sm mx-auto h-full max-h-[425px]">
       
@@ -291,6 +291,8 @@
     const speedSlider = document.getElementById('speedSlider');
     const speedLabel = document.getElementById('speedLabel');
 
+    let currentAudio = null;
+
     if (speedSlider && speedLabel) {
       speedSlider.value = currentRate;
       speedLabel.textContent = `${currentRate.toFixed(2)}x`;
@@ -299,21 +301,23 @@
         const val = parseFloat(e.target.value);
         currentRate = (!isNaN(val) && val >= 0.5) ? val : 0.75;
         speedLabel.textContent = `${currentRate.toFixed(2)}x`;
+        if (currentAudio) {
+          currentAudio.playbackRate = currentRate;
+        }
         try {
           localStorage.setItem('french_voice_rate', currentRate);
         } catch (err) {}
       });
     }
 
-    // Определение платформы
+    // Платформенные маркеры
     const ua = navigator.userAgent.toLowerCase();
     const isHuawei = /huawei|honor|harmonyos|ady-/i.test(ua);
     const isAndroid = /android/i.test(ua);
     const isTelegramApp = Boolean(window.TelegramWebviewProxy || (tg && tg.initData && tg.initData.length > 0) || /telegram/i.test(ua));
-    // Внутри Telegram WebView на Android SpeechRecognition не поддерживается движком WebView
     const forceMediaRecorder = isHuawei || (isAndroid && isTelegramApp);
 
-    // Воспроизведение звука с гарантированным разблокированием на Android
+    // Воспроизведение звука с HTML5-фоллбэком для Oppo в Telegram
     let audioCtx = null;
     window.currentUtterance = null;
 
@@ -325,11 +329,20 @@
         if (audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
-        const buffer = audioCtx.createBuffer(1, 1, 22050);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
+      } catch (e) {}
+    }
+
+    function playAudioFallback(text) {
+      try {
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+        const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
+        const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=' + encodeURIComponent(text);
+        currentAudio = new Audio(url);
+        currentAudio.playbackRate = safeRate;
+        currentAudio.play().catch(() => {});
       } catch (e) {}
     }
 
@@ -337,18 +350,33 @@
       haptic('light');
       unlockAudioChannel();
 
-      if ('speechSynthesis' in window) {
-        if (window.speechSynthesis.speaking) {
-          window.speechSynthesis.cancel();
-        }
-        window.speechSynthesis.resume();
+      const text = curriculum[currentIndex].phrase;
 
-        const text = curriculum[currentIndex].phrase;
+      // На Oppo внутри Telegram WebView синтезатор часто блокируется — запускаем прямой звуковой поток
+      if (isAndroid && isTelegramApp) {
+        playAudioFallback(text);
+        return;
+      }
+
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+        } catch (e) {}
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
 
         const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
         utterance.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
+
+        let didStart = false;
+        utterance.onstart = () => { didStart = true; };
+        utterance.onerror = () => { playAudioFallback(text); };
+
+        setTimeout(() => {
+          if (!didStart) playAudioFallback(text);
+        }, 300);
 
         try {
           const voices = window.speechSynthesis.getVoices();
@@ -362,6 +390,8 @@
 
         window.currentUtterance = utterance;
         window.speechSynthesis.speak(utterance);
+      } else {
+        playAudioFallback(text);
       }
     });
 
@@ -427,7 +457,6 @@
       } catch (err) {
         stopAllRecording();
         haptic('error');
-        alert("Разрешите доступ к микрофону в Telegram.");
       }
     }
 
@@ -467,7 +496,6 @@
 
           recognition.onerror = (e) => {
             stopAllRecording();
-            // Если в браузере модуль распознавания выдал сетевой сбой, откатываемся на системный MediaRecorder
             if (e.error === 'service-not-allowed' || e.error === 'not-allowed') {
               startMediaCapture();
             }
@@ -486,23 +514,27 @@
       }
     });
 
-    // Валидация речи (строгая проверка)
+    // Валидация речи (нормализация диакритики, апострофов и сленга)
     function normalizeFrench(str) {
       if (!str) return '';
-      let s = str.toLowerCase()
-        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?«»]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-      
-      // Эквиваленты разговорной речи без допущения грубых ошибок
-      s = s.replace(/\bpetit\b/g, "ptit")
-           .replace(/\bsil te plait\b/g, "ste plait")
-           .replace(/\bs il te plait\b/g, "ste plait")
-           .replace(/\bsil vous plait\b/g, "ste plait")
-           .replace(/\bs il vous plait\b/g, "ste plait")
-           .replace(/\bchuis\b/g, "je suis")
-           .replace(/\bce nest pas\b/g, "cest pas")
-           .replace(/\bil y a\b/g, "ya");
+      let s = str.toLowerCase();
+      // Убираем французские ударения и диакритику (é -> e, î -> i, à -> a)
+      s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      // Убираем апострофы слитно, чтобы p'tit -> ptit, s'te -> ste
+      s = s.replace(/['’]/g, '');
+      // Убираем знаки препинания
+      s = s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?«»!]/g, ' ');
+      s = s.replace(/\s+/g, ' ').trim();
+
+      // Разговорные синонимы и погрешности распознавания Google
+      s = s.replace(/\bpetit\b/g, 'ptit')
+           .replace(/\bdes cas\b/g, 'deca')
+           .replace(/\bdecafeine\b/g, 'deca')
+           .replace(/\bsil vous plait\b/g, 'ste plait')
+           .replace(/\bsil te plait\b/g, 'ste plait')
+           .replace(/\bchuis\b/g, 'je suis')
+           .replace(/\bce nest pas\b/g, 'cest pas')
+           .replace(/\bil y a\b/g, 'ya');
       return s;
     }
 
@@ -538,12 +570,12 @@
       const target = normalizeFrench(curriculum[currentIndex].phrase);
       const user = normalizeFrench(userInput.value);
 
-      // Проверка полноты фразы: произнесено должно быть не менее 75% длины
+      // Проверка длины: не менее 55% фразы (защита от зачета по 1 слову)
       const lengthRatio = user.length / Math.max(1, target.length);
       const score = getSimilarity(user, target);
 
-      // Порог 82% и запрет на пропуск слов
-      if (lengthRatio >= 0.75 && score >= 0.82) {
+      // Сбалансированный порог 70%
+      if (lengthRatio >= 0.55 && score >= 0.70) {
         haptic('success');
         userInput.classList.add('border-emerald-400', 'bg-emerald-950/20');
         setTimeout(() => {
