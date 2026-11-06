@@ -109,6 +109,20 @@
               <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
             </svg>
           </button>
+          <!-- Регулятор темпа речи -->
+          <div class="flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-700/60 shadow-inner">
+            <span class="text-xs">🐢</span>
+            <input 
+              id="speedSlider" 
+              type="range" 
+              min="0.5" 
+              max="1.1" 
+              step="0.05" 
+              value="0.75" 
+              class="w-24 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-teal-400"
+            />
+            <span id="speedLabel" class="text-xs font-mono text-teal-300 w-9 text-right">0.75x</span>
+          </div>
           <div id="targetPhrase" class="text-lg font-bold text-slate-100 tracking-tight">
             "Salut ! Un p'tit déca, s'te plaît."
           </div>
@@ -255,7 +269,7 @@
         const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
-        utterance.rate = 0.65;
+        utterance.rate = currentRate;
 
         const voices = window.speechSynthesis.getVoices();
         const frenchVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
