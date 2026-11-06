@@ -255,7 +255,7 @@
         const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
-        utterance.rate = 0.75;
+        utterance.rate = 0.65;
 
         const voices = window.speechSynthesis.getVoices();
         const frenchVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
