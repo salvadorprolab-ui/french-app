@@ -270,8 +270,9 @@
 
     // Универсальный микрофон: SpeechRecognition (Mac/Oppo) + MediaRecorder (Huawei/iOS)
     // Универсальный микрофон (MacBook, Oppo, Huawei)
+    // Универсальный микрофон (MacBook, Oppo, Huawei Pura 70)
     const btnRecord = document.getElementById('btnRecord');
-    const isHuawei = /huawei|honor|harmonyos/ady-/i.test(navigator.userAgent);
+    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(navigator.userAgent);
     const HasSpeechRec = !isHuawei && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
     let isRecording = false;
@@ -312,19 +313,19 @@
 
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
-     // Повторный клик: корректно глушим запись
+        // Повторный клик: корректно останавливаем запись и вставляем фразу
         userInput.value = curriculum[currentIndex].phrase;
         haptic('success');
         stopAllRecording();
         return;
       }
 
-      // Первый клик: инициализация чистого потока
+      // Первый клик: старт записи
       userInput.value = '';
       haptic('impact');
 
       if (HasSpeechRec) {
-        // Для Mac и Oppo (распознавание речи через доступные службы)
+        // Системное распознавание (Mac, Oppo)
         try {
           const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
           recognition = new SR();
@@ -361,7 +362,7 @@
           stopAllRecording();
         }
       } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Для Huawei (прямой системный аудиозахват без сервисов Google)
+        // Прямой захват аудиопотока (Huawei Pura 70 на HarmonyOS / EMUI)
         try {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           mediaRecorder = new MediaRecorder(audioStream);
@@ -388,7 +389,7 @@
         alert("Микрофон не поддерживается.");
       }
     });
-
+    
     function clean(str) {
       return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?]/g, "").trim();
     }
