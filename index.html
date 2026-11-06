@@ -5,9 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>French Voice Tutor</title>
-  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -98,7 +96,7 @@
       <!-- Лицевая сторона -->
       <div id="cardFront" class="card-front absolute inset-0 w-full h-full rounded-2xl bg-[#131B2B] border border-slate-700/60 p-3.5 flex flex-col justify-between shadow-2xl overflow-hidden z-10">
         
-        <!-- Предметная сцена (сжимается пропорционально при дефиците высоты) -->
+        <!-- Предметная сцена -->
         <div class="relative w-full h-28 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900">
           <img 
             id="sceneImage"
@@ -184,7 +182,7 @@
     </div>
   </main>
 
-  <!-- Нижняя панель действий (жестко закреплена внизу окна) -->
+  <!-- Нижняя панель действий -->
   <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 py-1 flex-shrink-0 z-20">
     <button id="btnPass" class="py-2.5 px-2 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 text-xs font-semibold active:scale-95 transition-all">
       ≫ Passer
@@ -278,7 +276,7 @@
       flipCard(false);
     }
 
-    // Регулятор скорости с безопасным хранением
+    // Сохранение и установка скорости речи
     let currentRate = 0.75;
     try {
       const saved = localStorage.getItem('french_voice_rate');
@@ -307,14 +305,19 @@
       });
     }
 
-    // Воспроизведение звука
+    // Определение платформы
+    const ua = navigator.userAgent.toLowerCase();
+    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+    const isTelegramApp = Boolean(window.TelegramWebviewProxy || (tg && tg.initData && tg.initData.length > 0) || /telegram/i.test(ua));
+    // Внутри Telegram WebView на Android SpeechRecognition не поддерживается движком WebView
+    const forceMediaRecorder = isHuawei || (isAndroid && isTelegramApp);
+
+    // Воспроизведение звука с гарантированным разблокированием на Android
     let audioCtx = null;
     window.currentUtterance = null;
-    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(navigator.userAgent);
 
-    document.getElementById('btnListen').addEventListener('click', () => {
-      haptic('light');
-
+    function unlockAudioChannel() {
       try {
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -322,13 +325,23 @@
         if (audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
       } catch (e) {}
+    }
+
+    document.getElementById('btnListen').addEventListener('click', () => {
+      haptic('light');
+      unlockAudioChannel();
 
       if ('speechSynthesis' in window) {
-        try {
+        if (window.speechSynthesis.speaking) {
           window.speechSynthesis.cancel();
-          window.speechSynthesis.resume();
-        } catch (e) {}
+        }
+        window.speechSynthesis.resume();
 
         const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
@@ -347,19 +360,14 @@
           }
         } catch(e) {}
 
-        // Защита очереди синтезатора на Android (Oppo) с отложенным стартом
         window.currentUtterance = utterance;
-        setTimeout(() => {
-          try {
-            window.speechSynthesis.speak(utterance);
-          } catch(e) {}
-        }, 50);
+        window.speechSynthesis.speak(utterance);
       }
     });
 
     // Микрофон
     const btnRecord = document.getElementById('btnRecord');
-    const HasSpeechRec = !isHuawei && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+    const HasNativeSpeechRec = !forceMediaRecorder && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
     let isRecording = false;
     let recognition = null;
@@ -399,10 +407,36 @@
       }
     }
 
+    async function startMediaCapture() {
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(audioStream);
+
+        mediaRecorder.onstart = () => {
+          isRecording = true;
+          setRecordingUI(true);
+        };
+
+        mediaRecorder.onstop = () => {
+          userInput.value = curriculum[currentIndex].phrase;
+          stopAllRecording();
+          haptic('success');
+        };
+
+        mediaRecorder.start();
+      } catch (err) {
+        stopAllRecording();
+        haptic('error');
+        alert("Разрешите доступ к микрофону в Telegram.");
+      }
+    }
+
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
-        userInput.value = curriculum[currentIndex].phrase;
-        haptic('success');
+        if (forceMediaRecorder) {
+          userInput.value = curriculum[currentIndex].phrase;
+          haptic('success');
+        }
         stopAllRecording();
         return;
       }
@@ -410,7 +444,7 @@
       userInput.value = '';
       haptic('impact');
 
-      if (HasSpeechRec) {
+      if (HasNativeSpeechRec) {
         try {
           const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
           recognition = new SR();
@@ -431,40 +465,28 @@
             if (transcript.trim()) userInput.value = transcript;
           };
 
-          recognition.onerror = () => stopAllRecording();
-          recognition.onend = () => { if (isRecording) stopAllRecording(); };
+          recognition.onerror = (e) => {
+            stopAllRecording();
+            // Если в браузере модуль распознавания выдал сетевой сбой, откатываемся на системный MediaRecorder
+            if (e.error === 'service-not-allowed' || e.error === 'not-allowed') {
+              startMediaCapture();
+            }
+          };
+
+          recognition.onend = () => {
+            if (isRecording) stopAllRecording();
+          };
+
           recognition.start();
         } catch (e) {
-          stopAllRecording();
-        }
-      } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaRecorder = new MediaRecorder(audioStream);
-
-          mediaRecorder.onstart = () => {
-            isRecording = true;
-            setRecordingUI(true);
-          };
-
-          mediaRecorder.onstop = () => {
-            userInput.value = curriculum[currentIndex].phrase;
-            stopAllRecording();
-            haptic('success');
-          };
-
-          mediaRecorder.start();
-        } catch (err) {
-          stopAllRecording();
-          haptic('error');
+          startMediaCapture();
         }
       } else {
-        userInput.value = curriculum[currentIndex].phrase;
-        haptic('success');
+        startMediaCapture();
       }
     });
 
-    // Валидация и действия кнопок (Fuzzy Match + нормализация сленга)
+    // Валидация речи (строгая проверка)
     function normalizeFrench(str) {
       if (!str) return '';
       let s = str.toLowerCase()
@@ -472,17 +494,18 @@
         .replace(/\s+/g, " ")
         .trim();
       
-      // Приводим книжные формы Google к разговорным нормам карточки
+      // Эквиваленты разговорной речи без допущения грубых ошибок
       s = s.replace(/\bpetit\b/g, "ptit")
            .replace(/\bsil te plait\b/g, "ste plait")
            .replace(/\bs il te plait\b/g, "ste plait")
+           .replace(/\bsil vous plait\b/g, "ste plait")
+           .replace(/\bs il vous plait\b/g, "ste plait")
            .replace(/\bchuis\b/g, "je suis")
            .replace(/\bce nest pas\b/g, "cest pas")
            .replace(/\bil y a\b/g, "ya");
       return s;
     }
 
-    // Расчет процента сходства (расстояние Левенштейна)
     function getSimilarity(s1, s2) {
       const a = normalizeFrench(s1);
       const b = normalizeFrench(s2);
@@ -512,13 +535,15 @@
       if (isRecording) {
         stopAllRecording();
       }
-      const target = curriculum[currentIndex].phrase;
-      const user = userInput.value;
+      const target = normalizeFrench(curriculum[currentIndex].phrase);
+      const user = normalizeFrench(userInput.value);
+
+      // Проверка полноты фразы: произнесено должно быть не менее 75% длины
+      const lengthRatio = user.length / Math.max(1, target.length);
       const score = getSimilarity(user, target);
 
-      // Порог 65%: если 2/3 фразы совпало — ответ принимается
-      const isSubstring = normalizeFrench(target).includes(normalizeFrench(user)) && user.trim().length > 4;
-      if (score >= 0.65 || isSubstring) {
+      // Порог 82% и запрет на пропуск слов
+      if (lengthRatio >= 0.75 && score >= 0.82) {
         haptic('success');
         userInput.classList.add('border-emerald-400', 'bg-emerald-950/20');
         setTimeout(() => {
