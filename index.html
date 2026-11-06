@@ -250,6 +250,20 @@
     let audioCtx = null;
     window.currentUtterance = null;
 
+    // Управление скоростью речи и сохранение выбора пользователя
+    const speedSlider = document.getElementById('speedSlider');
+    const speedLabel = document.getElementById('speedLabel');
+    let currentRate = parseFloat(localStorage.getItem('french_voice_rate')) || 0.75;
+    
+    speedSlider.value = currentRate;
+    speedLabel.textContent = `${currentRate.toFixed(2)}x`;
+
+    speedSlider.addEventListener('input', (e) => {
+      currentRate = parseFloat(e.target.value);
+      speedLabel.textContent = `${currentRate.toFixed(2)}x`;
+      localStorage.setItem('french_voice_rate', currentRate);
+    });
+    
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
 
