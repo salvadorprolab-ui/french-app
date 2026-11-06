@@ -271,7 +271,7 @@
     // Универсальный микрофон: SpeechRecognition (Mac/Oppo) + MediaRecorder (Huawei/iOS)
     // Универсальный микрофон (MacBook, Oppo, Huawei)
     const btnRecord = document.getElementById('btnRecord');
-    const isHuawei = /huawei|honor|harmonyos/i.test(navigator.userAgent);
+    const isHuawei = /huawei|honor|harmonyos/ady-/i.test(navigator.userAgent);
     const HasSpeechRec = !isHuawei && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
     let isRecording = false;
