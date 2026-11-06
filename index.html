@@ -313,11 +313,11 @@
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
      // Повторный клик: корректно глушим запись
-       userInput.value = curriculum[currentIndex].phrase;
-       haptic('success');
-     stopAllRecording();
-     return;
-   }
+        userInput.value = curriculum[currentIndex].phrase;
+        haptic('success');
+        stopAllRecording();
+        return;
+      }
 
       // Первый клик: инициализация чистого потока
       userInput.value = '';
