@@ -310,18 +310,15 @@
       });
     }
 
-    // Платформенные маркеры
-    const ua = navigator.userAgent.toLowerCase();
-    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(ua);
-    const isAndroid = /android/i.test(ua);
-    const isTelegramApp = Boolean(window.TelegramWebviewProxy || (tg && tg.initData && tg.initData.length > 0) || /telegram/i.test(ua));
-    const forceMediaRecorder = isHuawei || (isAndroid && isTelegramApp);
+    // Определение платформы
+    const isHuawei = /huawei|honor|harmonyos|ady-/i.test(navigator.userAgent);
+    const SpeechRec = !isHuawei && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
-    // Воспроизведение звука с HTML5-фоллбэком для Oppo в Telegram
+    // Воспроизведение звука (прямой системный поток без блокировок)
     let audioCtx = null;
     window.currentUtterance = null;
 
-    function unlockAudioChannel() {
+    function unlockAudio() {
       try {
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -332,51 +329,20 @@
       } catch (e) {}
     }
 
-    function playAudioFallback(text) {
-      try {
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio = null;
-        }
-        const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
-        const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=' + encodeURIComponent(text);
-        currentAudio = new Audio(url);
-        currentAudio.playbackRate = safeRate;
-        currentAudio.play().catch(() => {});
-      } catch (e) {}
-    }
-
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
-      unlockAudioChannel();
-
-      const text = curriculum[currentIndex].phrase;
-
-      // На Oppo внутри Telegram WebView синтезатор часто блокируется — запускаем прямой звуковой поток
-      if (isAndroid && isTelegramApp) {
-        playAudioFallback(text);
-        return;
-      }
+      unlockAudio();
 
       if ('speechSynthesis' in window) {
-        try {
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.resume();
-        } catch (e) {}
+        // На Android WebView cancel() перед speak() глушит поток — используем только resume()
+        window.speechSynthesis.resume();
 
+        const text = curriculum[currentIndex].phrase;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'fr-FR';
 
         const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
         utterance.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
-
-        let didStart = false;
-        utterance.onstart = () => { didStart = true; };
-        utterance.onerror = () => { playAudioFallback(text); };
-
-        setTimeout(() => {
-          if (!didStart) playAudioFallback(text);
-        }, 300);
 
         try {
           const voices = window.speechSynthesis.getVoices();
@@ -390,15 +356,11 @@
 
         window.currentUtterance = utterance;
         window.speechSynthesis.speak(utterance);
-      } else {
-        playAudioFallback(text);
       }
     });
 
     // Микрофон
     const btnRecord = document.getElementById('btnRecord');
-    const HasNativeSpeechRec = !forceMediaRecorder && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
-
     let isRecording = false;
     let recognition = null;
     let mediaRecorder = null;
@@ -430,9 +392,7 @@
       }
       mediaRecorder = null;
       if (audioStream) {
-        try {
-          audioStream.getTracks().forEach(t => t.stop());
-        } catch (e) {}
+        try { audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
         audioStream = null;
       }
     }
@@ -448,9 +408,11 @@
         };
 
         mediaRecorder.onstop = () => {
-          userInput.value = curriculum[currentIndex].phrase;
+          if (!userInput.value.trim()) {
+            userInput.value = curriculum[currentIndex].phrase;
+            haptic('success');
+          }
           stopAllRecording();
-          haptic('success');
         };
 
         mediaRecorder.start();
@@ -462,7 +424,8 @@
 
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
-        if (forceMediaRecorder) {
+        // Если реальное распознавание не вставило текст (Huawei или сбой STT) — подставляем фразу гарантированно
+        if (!userInput.value.trim()) {
           userInput.value = curriculum[currentIndex].phrase;
           haptic('success');
         }
@@ -473,10 +436,9 @@
       userInput.value = '';
       haptic('impact');
 
-      if (HasNativeSpeechRec) {
+      if (SpeechRec) {
         try {
-          const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-          recognition = new SR();
+          recognition = new SpeechRec();
           recognition.lang = 'fr-FR';
           recognition.continuous = true;
           recognition.interimResults = true;
@@ -494,11 +456,9 @@
             if (transcript.trim()) userInput.value = transcript;
           };
 
-          recognition.onerror = (e) => {
+          recognition.onerror = () => {
             stopAllRecording();
-            if (e.error === 'service-not-allowed' || e.error === 'not-allowed') {
-              startMediaCapture();
-            }
+            startMediaCapture();
           };
 
           recognition.onend = () => {
