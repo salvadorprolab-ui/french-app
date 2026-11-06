@@ -347,8 +347,13 @@
           }
         } catch(e) {}
 
+        // Защита очереди синтезатора на Android (Oppo) с отложенным стартом
         window.currentUtterance = utterance;
-        window.speechSynthesis.speak(utterance);
+        setTimeout(() => {
+          try {
+            window.speechSynthesis.speak(utterance);
+          } catch(e) {}
+        }, 50);
       }
     });
 
@@ -459,19 +464,61 @@
       }
     });
 
-    // Валидация и действия кнопок
-    function clean(str) {
-      return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?«»]/g, "").trim();
+    // Валидация и действия кнопок (Fuzzy Match + нормализация сленга)
+    function normalizeFrench(str) {
+      if (!str) return '';
+      let s = str.toLowerCase()
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?«»]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      
+      // Приводим книжные формы Google к разговорным нормам карточки
+      s = s.replace(/\bpetit\b/g, "ptit")
+           .replace(/\bsil te plait\b/g, "ste plait")
+           .replace(/\bs il te plait\b/g, "ste plait")
+           .replace(/\bchuis\b/g, "je suis")
+           .replace(/\bce nest pas\b/g, "cest pas")
+           .replace(/\bil y a\b/g, "ya");
+      return s;
+    }
+
+    // Расчет процента сходства (расстояние Левенштейна)
+    function getSimilarity(s1, s2) {
+      const a = normalizeFrench(s1);
+      const b = normalizeFrench(s2);
+      if (a === b) return 1.0;
+      if (!a.length || !b.length) return 0.0;
+
+      const track = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+      for (let i = 0; i <= a.length; i += 1) track[0][i] = i;
+      for (let j = 0; j <= b.length; j += 1) track[j][0] = j;
+
+      for (let j = 1; j <= b.length; j += 1) {
+        for (let i = 1; i <= a.length; i += 1) {
+          const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+          track[j][i] = Math.min(
+            track[j][i - 1] + 1,
+            track[j - 1][i] + 1,
+            track[j - 1][i - 1] + indicator
+          );
+        }
+      }
+      const distance = track[b.length][a.length];
+      const maxLen = Math.max(a.length, b.length);
+      return 1.0 - (distance / maxLen);
     }
 
     function validateAnswer() {
       if (isRecording) {
         stopAllRecording();
       }
-      const target = clean(curriculum[currentIndex].phrase);
-      const user = clean(userInput.value);
+      const target = curriculum[currentIndex].phrase;
+      const user = userInput.value;
+      const score = getSimilarity(user, target);
 
-      if (user === target || (user.length > 0 && target.includes(user))) {
+      // Порог 65%: если 2/3 фразы совпало — ответ принимается
+      const isSubstring = normalizeFrench(target).includes(normalizeFrench(user)) && user.trim().length > 4;
+      if (score >= 0.65 || isSubstring) {
         haptic('success');
         userInput.classList.add('border-emerald-400', 'bg-emerald-950/20');
         setTimeout(() => {
