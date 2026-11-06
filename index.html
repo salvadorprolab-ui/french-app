@@ -313,7 +313,6 @@
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
      // Повторный клик: корректно глушим запись
-     if (!HasSpeechRec) {
        userInput.value = curriculum[currentIndex].phrase;
        haptic('success');
      }
