@@ -618,21 +618,32 @@
 
     let audioCtx = null;
     let htmlAudio = null;
+    let isAudioPlaying = false;
+    let dialogTimeout = null;
     window.currentUtterance = null;
 
     function stopAllAudio() {
+      if (dialogTimeout) {
+        clearTimeout(dialogTimeout);
+        dialogTimeout = null;
+      }
       if (htmlAudio) {
-        try { htmlAudio.pause(); } catch(e) {}
+        try { 
+          htmlAudio.pause(); 
+          htmlAudio.currentTime = 0; 
+        } catch(e) {}
         htmlAudio = null;
       }
       if ('speechSynthesis' in window) {
         try { window.speechSynthesis.cancel(); } catch(e) {}
       }
+      isAudioPlaying = false;
     }
 
-    // Последовательное воспроизведение диалога через стрим (Android Telegram WebView fallback)
+    // Последовательное воспроизведение диалога через стрим (Android Telegram WebView)
     function playStreamAudioSequence(firstText, secondText, rate) {
       stopAllAudio();
+      isAudioPlaying = true;
       const safeRate = (typeof rate === 'number' && !isNaN(rate)) ? rate : 0.75;
       const getTtsUrl = (txt) => 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=' + encodeURIComponent(txt);
 
@@ -640,22 +651,28 @@
         htmlAudio = new Audio(getTtsUrl(firstText));
         htmlAudio.playbackRate = safeRate;
         htmlAudio.onended = () => {
-          setTimeout(() => {
+          dialogTimeout = setTimeout(() => {
             htmlAudio = new Audio(getTtsUrl(secondText));
             htmlAudio.playbackRate = safeRate;
-            htmlAudio.play().catch(() => {});
+            htmlAudio.onended = () => { isAudioPlaying = false; };
+            htmlAudio.onerror = () => { isAudioPlaying = false; };
+            htmlAudio.play().catch(() => { isAudioPlaying = false; });
           }, 500);
         };
         htmlAudio.onerror = () => {
           htmlAudio = new Audio(getTtsUrl(secondText));
           htmlAudio.playbackRate = safeRate;
-          htmlAudio.play().catch(() => {});
+          htmlAudio.onended = () => { isAudioPlaying = false; };
+          htmlAudio.onerror = () => { isAudioPlaying = false; };
+          htmlAudio.play().catch(() => { isAudioPlaying = false; });
         };
-        htmlAudio.play().catch(() => {});
+        htmlAudio.play().catch(() => { isAudioPlaying = false; });
       } else {
         htmlAudio = new Audio(getTtsUrl(secondText));
         htmlAudio.playbackRate = safeRate;
-        htmlAudio.play().catch(() => {});
+        htmlAudio.onended = () => { isAudioPlaying = false; };
+        htmlAudio.onerror = () => { isAudioPlaying = false; };
+        htmlAudio.play().catch(() => { isAudioPlaying = false; });
       }
     }
 
@@ -675,10 +692,14 @@
           window.speechSynthesis.resume();
         } catch (e) {}
 
+        isAudioPlaying = true;
+
         const targetUtt = new SpeechSynthesisUtterance(targetText);
         targetUtt.lang = 'fr-FR';
         targetUtt.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
         targetUtt.pitch = 1.05;
+        targetUtt.onend = () => { isAudioPlaying = false; };
+        targetUtt.onerror = () => { isAudioPlaying = false; };
 
         // Поиск французских тембров
         let frVoices = [];
@@ -697,14 +718,14 @@
           const partnerUtt = new SpeechSynthesisUtterance(partnerText);
           partnerUtt.lang = 'fr-FR';
           partnerUtt.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
-          partnerUtt.pitch = 0.95; // Чуть глубже тембр собеседника
+          partnerUtt.pitch = 0.95;
 
           if (frVoices.length > 0 && !isHuawei) {
             partnerUtt.voice = frVoices[0];
           }
 
           partnerUtt.onend = () => {
-            setTimeout(() => {
+            dialogTimeout = setTimeout(() => {
               window.speechSynthesis.speak(targetUtt);
             }, 500);
           };
@@ -726,6 +747,12 @@
 
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
+
+      // Повторное нажатие при активном звуке останавливает воспроизведение
+      if (isAudioPlaying) {
+        stopAllAudio();
+        return;
+      }
 
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -803,6 +830,7 @@
     }
 
     btnRecord.addEventListener('click', async () => {
+      stopAllAudio();
       if (isRecording) {
         if (!userInput.value.trim()) {
           userInput.value = activeDeck[currentIndex].phrase;
