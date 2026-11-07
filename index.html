@@ -850,10 +850,7 @@
         };
 
         mediaRecorder.onstop = () => {
-          if (!userInput.value.trim()) {
-            userInput.value = activeDeck[currentIndex].phrase;
-            haptic('success');
-          }
+          // Запись остановлена: никаких подстановок текста ответа
           stopAllRecording();
         };
 
@@ -865,14 +862,10 @@
     }
 
     btnRecord.addEventListener('click', async () => {
-      // Клик по микрофону моментально и полностью глушит динамик
       stopAllAudio();
 
       if (isRecording) {
-        if (!userInput.value.trim()) {
-          userInput.value = activeDeck[currentIndex].phrase;
-          haptic('success');
-        }
+        // Повторный клик: останавливаем запись. Поле остаётся пустым, если ничего не сказано
         stopAllRecording();
         return;
       }
@@ -897,7 +890,9 @@
             for (let i = event.resultIndex; i < event.results.length; ++i) {
               transcript += event.results[i][0].transcript;
             }
-            if (transcript.trim()) userInput.value = transcript;
+            if (transcript.trim()) {
+              userInput.value = transcript;
+            }
           };
 
           recognition.onerror = () => {
