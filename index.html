@@ -800,7 +800,7 @@
     });
 
     // ══════════════════════════════════════════════════════════════════
-    // МОДУЛЬ МИКРОФОНА (ПЕРЕИСПОЛЬЗОВАНИЕ ПОТОКА БЕЗ ПОВТОРНЫХ ОКОН)
+    // МОДУЛЬ МИКРОФОНА (КЭШИРОВАНИЕ КАНАЛА ДЛЯ ANDROID И HUAWEI)
     // ══════════════════════════════════════════════════════════════════
     const btnRecord = document.getElementById('btnRecord');
     let isRecording = false;
@@ -820,7 +820,6 @@
       }
     }
 
-    // Запрашивает доступ один раз, затем использует уже открытый канал
     async function getOrCreateAudioStream() {
       if (audioStream && audioStream.active) {
         const tracks = audioStream.getAudioTracks();
@@ -847,8 +846,7 @@
       }
       mediaRecorder = null;
 
-      // Не вызываем track.stop(), а только выключаем прием звука.
-      // Это сохраняет сессию активной и предотвращает появление окна Telegram.
+      // Глушим дорожку без уничтожения потока (окно Telegram больше не выскочит)
       if (audioStream) {
         try {
           audioStream.getAudioTracks().forEach(t => { t.enabled = false; });
@@ -859,6 +857,8 @@
     async function startMediaCapture() {
       try {
         const stream = await getOrCreateAudioStream();
+        stream.getAudioTracks().forEach(t => { t.enabled = true; });
+
         mediaRecorder = new MediaRecorder(stream);
 
         mediaRecorder.onstart = () => {
@@ -888,7 +888,7 @@
       userInput.value = '';
       haptic('impact');
 
-      if (SpeechRec) {
+      if (SpeechRec && !(isAndroid && isTelegramApp)) {
         try {
           recognition = new SpeechRec();
           recognition.lang = 'fr-FR';
