@@ -616,33 +616,60 @@
     const isTelegramApp = Boolean(window.TelegramWebviewProxy || (window.Telegram?.WebApp?.initData && window.Telegram.WebApp.initData.length > 0) || /telegram/i.test(ua));
     const SpeechRec = !isHuawei && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
+    // ══════════════════════════════════════════════════════════════════
+    // АУДИОМОДУЛЬ И ДИАЛОГОВАЯ ОЗВУЧКА С ЖЕСТКИМ ОБНУЛЕНИЕМ
+    // ══════════════════════════════════════════════════════════════════
     let audioCtx = null;
     let htmlAudio = null;
     let isAudioPlaying = false;
     let dialogTimeout = null;
-    window.currentUtterance = null;
+    let currentSpeechId = 0;
+    window.currentPartnerUtt = null;
+    window.currentTargetUtt = null;
 
     function stopAllAudio() {
+      // Инкремент токена сессии аннулирует любые запланированные запуски
+      currentSpeechId++;
+      isAudioPlaying = false;
+
       if (dialogTimeout) {
         clearTimeout(dialogTimeout);
         dialogTimeout = null;
       }
+
       if (htmlAudio) {
-        try { 
-          htmlAudio.pause(); 
-          htmlAudio.currentTime = 0; 
+        try {
+          htmlAudio.onended = null;
+          htmlAudio.onerror = null;
+          htmlAudio.pause();
+          htmlAudio.currentTime = 0;
         } catch(e) {}
         htmlAudio = null;
       }
+
       if ('speechSynthesis' in window) {
-        try { window.speechSynthesis.cancel(); } catch(e) {}
+        try {
+          // Защита для macOS: обнуляем колбэки ДО вызова cancel(),
+          // чтобы системный синтезатор Safari/Chrome не запускал ответную реплику
+          if (window.currentPartnerUtt) {
+            window.currentPartnerUtt.onend = null;
+            window.currentPartnerUtt.onerror = null;
+          }
+          if (window.currentTargetUtt) {
+            window.currentTargetUtt.onend = null;
+            window.currentTargetUtt.onerror = null;
+          }
+          window.speechSynthesis.cancel();
+        } catch(e) {}
       }
-      isAudioPlaying = false;
+      window.currentPartnerUtt = null;
+      window.currentTargetUtt = null;
     }
 
-    // Последовательное воспроизведение диалога через стрим (Android Telegram WebView)
+    // Воспроизведение через стрим (Android Telegram WebView fallback)
     function playStreamAudioSequence(firstText, secondText, rate) {
       stopAllAudio();
+      const thisSpeechId = ++currentSpeechId;
       isAudioPlaying = true;
       const safeRate = (typeof rate === 'number' && !isNaN(rate)) ? rate : 0.75;
       const getTtsUrl = (txt) => 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=' + encodeURIComponent(txt);
@@ -651,34 +678,39 @@
         htmlAudio = new Audio(getTtsUrl(firstText));
         htmlAudio.playbackRate = safeRate;
         htmlAudio.onended = () => {
+          if (!isAudioPlaying || thisSpeechId !== currentSpeechId) return;
           dialogTimeout = setTimeout(() => {
+            if (!isAudioPlaying || thisSpeechId !== currentSpeechId) return;
             htmlAudio = new Audio(getTtsUrl(secondText));
             htmlAudio.playbackRate = safeRate;
-            htmlAudio.onended = () => { isAudioPlaying = false; };
-            htmlAudio.onerror = () => { isAudioPlaying = false; };
-            htmlAudio.play().catch(() => { isAudioPlaying = false; });
+            htmlAudio.onended = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+            htmlAudio.onerror = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+            htmlAudio.play().catch(() => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; });
           }, 500);
         };
         htmlAudio.onerror = () => {
+          if (!isAudioPlaying || thisSpeechId !== currentSpeechId) return;
           htmlAudio = new Audio(getTtsUrl(secondText));
           htmlAudio.playbackRate = safeRate;
-          htmlAudio.onended = () => { isAudioPlaying = false; };
-          htmlAudio.onerror = () => { isAudioPlaying = false; };
-          htmlAudio.play().catch(() => { isAudioPlaying = false; });
+          htmlAudio.onended = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+          htmlAudio.onerror = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+          htmlAudio.play().catch(() => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; });
         };
-        htmlAudio.play().catch(() => { isAudioPlaying = false; });
+        htmlAudio.play().catch(() => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; });
       } else {
         htmlAudio = new Audio(getTtsUrl(secondText));
         htmlAudio.playbackRate = safeRate;
-        htmlAudio.onended = () => { isAudioPlaying = false; };
-        htmlAudio.onerror = () => { isAudioPlaying = false; };
-        htmlAudio.play().catch(() => { isAudioPlaying = false; });
+        htmlAudio.onended = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+        htmlAudio.onerror = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+        htmlAudio.play().catch(() => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; });
       }
     }
 
     // Воспроизведение диалога: Собеседник -> пауза -> Ваш ответ
     function playDialogSpeech(partnerText, targetText, rate) {
       stopAllAudio();
+      const thisSpeechId = ++currentSpeechId;
+      isAudioPlaying = true;
       const safeRate = (typeof rate === 'number' && !isNaN(rate)) ? rate : 0.75;
 
       if (isAndroid && isTelegramApp) {
@@ -692,16 +724,14 @@
           window.speechSynthesis.resume();
         } catch (e) {}
 
-        isAudioPlaying = true;
-
         const targetUtt = new SpeechSynthesisUtterance(targetText);
         targetUtt.lang = 'fr-FR';
         targetUtt.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
         targetUtt.pitch = 1.05;
-        targetUtt.onend = () => { isAudioPlaying = false; };
-        targetUtt.onerror = () => { isAudioPlaying = false; };
+        targetUtt.onend = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+        targetUtt.onerror = () => { if (thisSpeechId === currentSpeechId) isAudioPlaying = false; };
+        window.currentTargetUtt = targetUtt;
 
-        // Поиск французских тембров
         let frVoices = [];
         try {
           const voices = window.speechSynthesis.getVoices();
@@ -725,19 +755,22 @@
           }
 
           partnerUtt.onend = () => {
+            // Если звук был остановлен или запущена новая операция — выход
+            if (!isAudioPlaying || thisSpeechId !== currentSpeechId) return;
             dialogTimeout = setTimeout(() => {
+              if (!isAudioPlaying || thisSpeechId !== currentSpeechId) return;
               window.speechSynthesis.speak(targetUtt);
             }, 500);
           };
 
           partnerUtt.onerror = () => {
+            if (!isAudioPlaying || thisSpeechId !== currentSpeechId) return;
             playStreamAudioSequence(partnerText, targetText, safeRate);
           };
 
-          window.currentUtterance = partnerUtt;
+          window.currentPartnerUtt = partnerUtt;
           window.speechSynthesis.speak(partnerUtt);
         } else {
-          window.currentUtterance = targetUtt;
           window.speechSynthesis.speak(targetUtt);
         }
       } else {
@@ -748,7 +781,7 @@
     document.getElementById('btnListen').addEventListener('click', () => {
       haptic('light');
 
-      // Повторное нажатие при активном звуке останавливает воспроизведение
+      // Повторный клик мгновенно глушит звук без переключения на другую реплику
       if (isAudioPlaying) {
         stopAllAudio();
         return;
@@ -766,7 +799,9 @@
       playDialogSpeech(partner, phrase, currentRate);
     });
 
-    // Микрофон
+    // ══════════════════════════════════════════════════════════════════
+    // МОДУЛЬ МИКРОФОНА
+    // ══════════════════════════════════════════════════════════════════
     const btnRecord = document.getElementById('btnRecord');
     let isRecording = false;
     let recognition = null;
@@ -830,7 +865,9 @@
     }
 
     btnRecord.addEventListener('click', async () => {
+      // Клик по микрофону моментально и полностью глушит динамик
       stopAllAudio();
+
       if (isRecording) {
         if (!userInput.value.trim()) {
           userInput.value = activeDeck[currentIndex].phrase;
@@ -880,7 +917,6 @@
         startMediaCapture();
       }
     });
-
     function normalizeFrench(str) {
       if (!str) return '';
       let s = str.toLowerCase();
