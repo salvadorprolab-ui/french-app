@@ -152,7 +152,7 @@
       <!-- Лицевая сторона: Картинка во весь блок -->
       <div id="cardFront" class="card-front absolute inset-0 w-full h-full rounded-3xl border border-slate-700/70 p-4 flex flex-col justify-between shadow-[0_25px_50px_-12px_rgba(0,0,0,0.85)] overflow-hidden z-10 bg-slate-950">
         
-        <!-- Задний фон: Полноэкранная сцена с кинематографичным градиентом (максимальная сочность и свет) -->
+        <!-- Задний фон: Полноэкранная сцена с кинематографичным градиентом -->
         <div class="absolute inset-0 w-full h-full z-0 overflow-hidden">
           <img 
             id="sceneImage"
@@ -160,22 +160,21 @@
             alt="Scène" 
             class="w-full h-full object-cover brightness-[0.98] contrast-[1.15] saturate-[1.55] transition-all duration-700"
           />
-          <!-- Тонкая подсветка: верх и центр полностью прозрачные и сочные, мягкая тень только у самого низа -->
           <div class="absolute inset-0 bg-gradient-to-t from-[#070A11]/85 via-[#070A11]/15 to-transparent"></div>
         </div>
 
-        <!-- Верхняя плашка контекста ситуации (растянута, крупный читаемый шрифт) -->
+        <!-- Верхняя плашка контекста ситуации -->
         <div class="relative z-10 w-full">
           <div id="sceneContextRu" class="w-full px-3.5 py-2 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/10 text-xs sm:text-sm text-slate-100 font-semibold tracking-wide shadow-lg text-center">
-            У цинковой стойки парижского бистро
+            Бариста: Sur place ou à emporter ?<br>(Здесь или с собой?)
           </div>
         </div>
 
-        <!-- Центральный речевой блок (растянут по ширине и высоте, увеличенный шрифт фразы) -->
+        <!-- Центральный речевой блок -->
         <div class="relative z-10 w-full flex flex-col items-center justify-center text-center my-auto py-1">
           
           <div class="flex items-center gap-3 mb-2">
-            <!-- Кнопка прослушивания -->
+            <!-- Кнопка прослушивания (Диалог: вопрос + ответ) -->
             <button id="btnListen" class="w-12 h-12 p-3 rounded-full bg-teal-500/20 hover:bg-teal-500/30 backdrop-blur-md border border-teal-400/60 text-teal-300 flex items-center justify-center shadow-[0_0_18px_rgba(45,212,191,0.35)] active:scale-95 transition-all duration-150 flex-shrink-0">
               <svg class="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
@@ -198,18 +197,18 @@
             </div>
           </div>
 
-          <!-- Текст фразы и транскрипция (на всю ширину, крупные буквы) -->
+          <!-- Текст фразы и транскрипция -->
           <div class="w-full p-4 rounded-2xl bg-slate-900/85 backdrop-blur-md border border-white/10 shadow-2xl">
             <div id="targetPhrase" class="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug drop-shadow-md">
-              "Salut ! Un p'tit déca, s'te plaît."
+              "À emporter, s'il vous plaît. Je suis un peu pressé."
             </div>
             <div id="targetPhonetic" class="text-xs sm:text-sm text-teal-300 font-mono mt-1.5 tracking-normal">
-              /sa.ly ɛ̃ pti de.ka stə plɛ/
+              /a ɑ̃.pɔʁ.te sil vu plɛ | ʒə sɥi œ̃ pø pʁe.se/
             </div>
           </div>
         </div>
 
-        <!-- Нижний блок: Поле ввода и микрофон (усиленное стекло + увеличенный микрофон) -->
+        <!-- Нижний блок: Поле ввода и микрофон -->
         <div class="relative z-10 w-full flex items-center gap-2 flex-shrink-0">
           <input 
             id="userInput"
@@ -226,32 +225,28 @@
 
       </div>
 
-      <!-- Тыльная сторона (Крупный читаемый шрифт на всю карточку) -->
+      <!-- Тыльная сторона -->
       <div id="cardBack" class="card-back pointer-events-none absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-b from-[#131B2B] to-[#0A0E17] border border-teal-500/50 p-5 flex flex-col justify-between shadow-[0_25px_50px_-12px_rgba(0,0,0,0.85)] z-20">
         
         <div class="flex-1 flex flex-col justify-center my-auto">
-          <!-- Заголовок секции перевода -->
           <span class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-teal-400 drop-shadow-sm">
             Смысловой перевод
           </span>
           
-          <!-- Главный русский перевод фразы (крупно) -->
           <h2 id="backTranslation" class="text-xl sm:text-2xl font-bold text-white mt-2 leading-snug drop-shadow-md">
-            Привет! Маленький декаф, пожалуйста.
+            С собой, пожалуйста. Я немного спешу.
           </h2>
 
-          <!-- Блок разговорного нюанса на всю ширину -->
           <div class="mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-inner">
             <span class="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
               <span>💡</span> Разговорный фокус:
             </span>
             <p id="backColloquial" class="text-sm sm:text-base text-slate-200 leading-relaxed font-normal">
-              Вместо книжного «s'il vous plaît» парижане используют короткую связку «s'te plaît», а «petit» редуцируется в «p'tit».
+              Вопрос: «sur place» (на месте) или «à emporter» (с собой). Ответ: «pressé» (в спешке). Часто сокращают до «chuis un peu pressé».
             </p>
           </div>
         </div>
 
-        <!-- Кнопка возврата на лицевую сторону -->
         <button id="btnFlipBack" class="w-full py-3.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-slate-100 text-sm font-bold border border-slate-700/80 active:scale-95 transition-all shadow-lg flex-shrink-0">
           ← Вернуться к фразе
         </button>
@@ -260,7 +255,7 @@
     </div>
   </main>
 
-  <!-- Нижняя панель действий (крупный жирный шрифт, стеклянные подложки) -->
+  <!-- Нижняя панель действий -->
   <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 py-1 flex-shrink-0 z-20">
     <button id="btnPass" class="py-2.5 px-1 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 backdrop-blur-md border border-white/15 text-slate-200 text-sm font-bold tracking-wide active:scale-95 transition-all shadow-md">
       ≫ Passer
@@ -294,150 +289,159 @@
     };
 
     const curriculum = [
-      // ══════════════════════════════════════════════════════════════════
       // СИТУАЦИЯ 1: Кафе и бистро (Au bistrot)
-      // ══════════════════════════════════════════════════════════════════
       {
         id: "bistro_001",
+        partnerPhrase: "Sur place ou à emporter ?",
         phrase: "À emporter, s'il vous plaît. Je suis un peu pressé.",
         phonetic: "/a ɑ̃.pɔʁ.te sil vu plɛ | ʒə sɥi œ̃ pø pʁe.se/",
         contextRu: "Бариста: Sur place ou à emporter ?<br>(Здесь или с собой?)",
         translation: "С собой, пожалуйста. Я немного спешу.",
-        colloquial: "Вопрос: «sur place» (на месте / за столиком) или «à emporter» (с собой на вынос). Ответ: «pressé» (в спешке / тороплюсь). В Париже часто сокращают до «chuis un peu pressé».",
+        colloquial: "Вопрос: «sur place» (на месте) или «à emporter» (с собой на вынос). Ответ: «pressé» (в спешке / тороплюсь). В Париже часто сокращают до «chuis un peu pressé».",
         image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "bistro_002",
+        partnerPhrase: "Et avec ceci ? Ce sera tout ?",
         phrase: "C'est quoi ça ? Je vais vous prendre une pâtisserie en plus.",
         phonetic: "/sɛ kwa sa | ʒə vɛ vu pʁɑ̃dʁ yn pa.tis.ʁi ɑ̃ plys/",
         contextRu: "Официант: Et avec ceci ? Ce sera tout ?<br>(И к этому? Это всё?)",
         translation: "А это что такое? Возьму у вас ещё вон то пирожное.",
-        colloquial: "Вопрос: «avec ceci» (к этому / ещё что-то?), «ce sera tout» (это всё?). Ответ: «C'est quoi ça ?» (живое «что это такое?» вместо книжного «qu'est-ce que c'est»), оборот «en plus» (вдобавок / сверху).",
+        colloquial: "Вопрос: «avec ceci» (к этому?), «ce sera tout» (это всё?). Ответ: «C'est quoi ça ?» (живое «что это такое?»), оборот «en plus» (вдобавок / сверху).",
         image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "bistro_003",
+        partnerPhrase: "Vous vous installez où ?",
         phrase: "Je mange sur place. La table là-bas est libre ?",
         phonetic: "/ʒə mɑ̃ʒ syʁ plas | la tabl la.ba ɛ libʁ/",
         contextRu: "Официант: Vous vous installez où ?<br>(Где вы присядете?)",
         translation: "Я поем здесь. Вон тот столик свободен?",
-        colloquial: "Вопрос: глагол «s'installer» (устраиваться / садиться), «où» (где). Ответ: «sur place» (в зале / на месте), указатель «là-bas» (вон там), «libre» (свободен / не занят).",
+        colloquial: "Вопрос: глагол «s'installer» (садиться), «où» (где). Ответ: «sur place» (на месте), указатель «là-bas» (вон там), «libre» (свободен).",
         image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "bistro_004",
+        partnerPhrase: "Une boisson avec le menu ?",
         phrase: "Remettez-moi une canette de coca bien fraîche, s'il vous plaît.",
         phonetic: "/ʁə.mɛ.te mwa yn ka.nɛt də kɔ.ka bjɛ̃ fʁɛʃ sil vu plɛ/",
         contextRu: "Бариста: Une boisson avec le menu ?<br>(Напиток к заказу?)",
         translation: "Повторите мне ещё баночку холодной колы, пожалуйста.",
-        colloquial: "Вопрос: «boisson» (напиток), «menu» (комплексный заказ / обед). Ответ: оборот «remettez-moi» (повторите / докиньте ещё), «canette» (жестяная банка), «bien fraîche» (хорошо охлаждённая).",
+        colloquial: "Вопрос: «boisson» (напиток), «menu» (комплекс/обед). Ответ: «remettez-moi» (повторите / докиньте ещё), «canette» (банка), «bien fraîche» (холодная).",
         image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "bistro_005",
+        partnerPhrase: "Ça vous a plu ?",
         phrase: "L'addition, s'il vous plaît. Je peux payer par carte ?",
         phonetic: "/la.di.sjɔ̃ sil vu plɛ | ʒə pø pe.je paʁ kaʁt/",
         contextRu: "Официант: Ça vous a plu ?<br>(Вам всё понравилось?)",
         translation: "Счёт, пожалуйста. Могу я оплатить картой?",
-        colloquial: "Вопрос: «Ça vous a plu ?» (стандартный вежливый вопрос в конце). Ответ: «l'addition» (счёт в заведении), способ оплаты — «par carte» (картой) или «sans contact» (бесконтактно).",
+        colloquial: "Вопрос: «Ça vous a plu ?» (Вам понравилось?). Ответ: «l'addition» (счёт), способ оплаты — «par carte» (картой) или «sans contact» (бесконтактно).",
         image: "https://images.unsplash.com/photo-1445116572660-238429888259?auto=format&fit=crop&w=800&q=80"
       },
 
-      // ══════════════════════════════════════════════════════════════════
       // СИТУАЦИЯ 2: Булочная и табачный киоск (Boulangerie & Tabac)
-      // ══════════════════════════════════════════════════════════════════
       {
         id: "boulangerie_001",
+        partnerPhrase: "Bonjour ! Qu'est-ce qu'il vous faudra ?",
         phrase: "Une tradition bien cuite et deux croissants, s'il vous plaît.",
         phonetic: "/yn tʁa.di.sjɔ̃ bjɛ̃ kɥit e dø kʁwa.sɑ̃ sil vu plɛ/",
         contextRu: "Продавец: Qu'est-ce qu'il vous faudra ?<br>(Что для вас?)",
         translation: "Один багет-традисьон позажаристее и два круассана, пожалуйста.",
-        colloquial: "Вопрос: «Qu'est-ce qu'il vous faudra ?» (вежливая формула: Что вам потребуется?). Ответ: «tradition» (хрустящий традиционный багет), «bien cuite» (позажаристее с корочкой; противоположность — «pas trop cuite»).",
+        colloquial: "Вопрос: «Qu'est-ce qu'il vous faudra ?» (Что вам потребуется?). Ответ: «tradition» (традиционный багет), «bien cuite» (позажаристее с корочкой).",
         image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "boulangerie_002",
+        partnerPhrase: "Et avec ça, ce sera tout ?",
         phrase: "Ajoutez-moi une part de pizza aussi, s'il vous plaît.",
         phonetic: "/a.ʒu.te mwa yn paʁ də pid.za o.si sil vu plɛ/",
         contextRu: "Продавец: Et avec ça, ce sera tout ?<br>(И к этому всё?)",
         translation: "Добавьте мне ещё кусок пиццы, пожалуйста.",
-        colloquial: "Вопрос: «ce sera tout ?» (это всё?). Ответ: «ajoutez-moi» (добавьте мне к заказу), «une part de...» (порционный треугольный кусок пиццы или пирога quiche).",
+        colloquial: "Вопрос: «ce sera tout ?» (это всё?). Ответ: «ajoutez-moi» (добавьте мне), «une part de...» (порционный кусок пиццы или пирога quiche).",
         image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "boulangerie_003",
+        partnerPhrase: "Monsieur ? Vous désirez ?",
         phrase: "Un paquet de blondes et un briquet avec ça, s'te plaît.",
         phonetic: "/œ̃ pa.kɛ də blɔ̃d e œ̃ bʁi.kɛ a.vɛk sa stə plɛ/",
         contextRu: "Продавец Tabac: Monsieur ? Vous désirez ?<br>(Месье? Что желаете?)",
         translation: "Пачку светлых сигарет и зажигалку к этому, пожалуйста.",
-        colloquial: "Вопрос: «Vous désirez ?» (стандартная реплика в табачной лавке). Ответ: «blondes» (сигареты со светлым табаком), «un briquet» (зажигалка), разговорная связка «s'te plaît» вместо книжного «s'il te plaît».",
+        colloquial: "Вопрос: «Vous désirez ?» (Что желаете?). Ответ: «blondes» (светлый табак), «un briquet» (зажигалка), разговорное «s'te plaît».",
         image: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "boulangerie_004",
+        partnerPhrase: "C'est pour consommer tout de suite ?",
         phrase: "Oui, vous pouvez me la chauffer deux minutes ?",
         phonetic: "/wi vu pu.ve mə la ʃo.fe dø mi.nyt/",
         contextRu: "Продавец: C'est pour consommer tout de suite ?<br>(Будете есть прямо сейчас?)",
         translation: "Да, можете подогреть мне это на пару минут?",
-        colloquial: "Вопрос: «consommer tout de suite» (съесть сразу на ходу). Ответ: в пекарнях используют короткий глагол «chauffer» вместо сложного «réchauffer au micro-ondes».",
+        colloquial: "Вопрос: «consommer tout de suite» (съесть сразу на ходу). Ответ: короткий глагол «chauffer» вместо длинного «réchauffer au micro-ondes».",
         image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "boulangerie_005",
+        partnerPhrase: "Vous avez de la monnaie ?",
         phrase: "Gardez la monnaie, et pas besoin de sac, merci !",
         phonetic: "/ɡaʁ.de la mɔ.nɛ e pa bə.zwɛ̃ də sak mɛʁ.si/",
         contextRu: "Продавец: Vous avez de la monnaie ?<br>(У вас есть мелочь?)",
         translation: "Оставьте сдачу себе, и пакет не нужен, спасибо!",
-        colloquial: "Вопрос: «la monnaie» (монеты / мелочь / сдача). Ответ: «gardez la monnaie» (оставьте сдачу себе), «pas besoin de...» (разговорное стяжение от «il n'y a pas besoin de»).",
+        colloquial: "Вопрос: «la monnaie» (мелочь / сдача). Ответ: «gardez la monnaie» (оставьте сдачу себе), «pas besoin de...» (не нужно).",
         image: "https://images.unsplash.com/photo-1556742049-0a67e557224f?auto=format&fit=crop&w=800&q=80"
       },
 
-      // ══════════════════════════════════════════════════════════════════
       // СИТУАЦИЯ 3: В такси (Dans le taxi parisien)
-      // ══════════════════════════════════════════════════════════════════
       {
         id: "taxi_001",
+        partnerPhrase: "Bonjour, vous allez où ?",
         phrase: "À la gare de Lyon, s'il vous plaît. On en a pour longtemps ?",
         phonetic: "/a la ɡaʁ də ljɔ̃ sil vu plɛ | ɔ̃.n‿ɑ̃.n‿a puʁ lɔ̃.tɑ̃/",
         contextRu: "Водитель: Bonjour, vous allez où ?<br>(Здравствуйте, куда едем?)",
         translation: "На Лионский вокзал, пожалуйста. Долго нам ехать?",
-        colloquial: "Вопрос: «vous allez où ?» (куда направляетесь?). Ответ: оборот «On en a pour longtemps ?» — фундаментальная разговорная связка носителей («Сколько по времени займёт поездка?»).",
+        colloquial: "Вопрос: «vous allez où ?» (куда едем?). Ответ: оборот «On en a pour longtemps ?» — живая связка («Сколько по времени займёт поездка?»).",
         image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "taxi_002",
+        partnerPhrase: "Ça coince un peu sur les quais ce matin.",
         phrase: "Je suis un peu à la bourre, y a moyen de contourner ?",
         phonetic: "/ʒə sɥi œ̃ pø a la buʁ | ja mwa.jɛ̃ də kɔ̃.tuʁ.ne/",
         contextRu: "Водитель: Ça coince un peu sur les quais ce matin.<br>(На набережных утром затор.)",
         translation: "Я немного опаздываю, есть вариант объехать?",
-        colloquial: "Вопрос: «ça coince» (букв. заклинило / пробка на дороге), «les quais» (набережные Сены). Ответ: «être à la bourre» (опаздывать), «y a moyen de...» (есть ли возможность / шанс объехать?).",
+        colloquial: "Вопрос: «ça coince» (пробка на дороге). Ответ: «être à la bourre» (опаздывать), «y a moyen de...» (есть ли возможность объехать?).",
         image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "taxi_003",
-        phrase: "Vous можете baisser un peu la vitre ou mettre la clim ?",
+        partnerPhrase: "Il commence à faire lourd dehors.",
+        phrase: "Vous pouvez baisser un peu la vitre ou mettre la clim ?",
         phonetic: "/vu pu.ve bɛ.se œ̃ pø la vitʁ u mɛtʁ la klim/",
         contextRu: "Водитель: Il commence à faire lourd dehors.<br>(На улице становится душно.)",
         translation: "Можете опустить немного стекло или включить кондиционер?",
-        colloquial: "Вопрос: «faire lourd» (парит / душный воздух). Ответ: «baisser la vitre» (опустить боковое стекло авто), «la clim» (разговорное сокращение от «climatisation»).",
+        colloquial: "Вопрос: «faire lourd» (душный воздух). Ответ: «baisser la vitre» (опустить боковое стекло авто), «la clim» (кондиционер).",
         image: "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "taxi_004",
+        partnerPhrase: "Je vous dépose juste devant l'entrée ?",
         phrase: "Laissez-moi juste au coin de la rue, ça ira très bien.",
         phonetic: "/lɛ.se mwa ʒyst o kwɛ̃ də la ʁy | sa i.ʁa tʁɛ bjɛ̃/",
         contextRu: "Водитель: Je vous dépose juste devant l'entrée ?<br>(Высадить прямо перед входом?)",
         translation: "Высадите меня прямо на углу улицы, так будет отлично.",
-        colloquial: "Вопрос: «déposer quelqu'un» (высадить пассажира у точки). Ответ: «au coin de la rue» (на углу улицы), формула согласия «ça ira très bien» (так отлично подойдёт).",
+        colloquial: "Вопрос: «déposer quelqu'un» (высадить пассажира). Ответ: «au coin de la rue» (на углу), согласие «ça ira très bien» (так отлично подойдёт).",
         image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "taxi_005",
-        phrase: "Je paye par carte, et vous можете me sortir un reçu ?",
+        partnerPhrase: "Voilà, on est arrivés ! Ça fera vingt-quatre euros.",
+        phrase: "Je paye par carte, et vous можете me sortir un reçu ?".replace("можете", "pouvez"),
         phonetic: "/ʒə pɛj paʁ kaʁt e vu pu.ve mə sɔʁ.tiʁ œ̃ ʁə.sy/",
         contextRu: "Водитель: Voilà, on est arrivés ! Ça fera 24 euros.<br>(Приехали! С вас 24 евро.)",
         translation: "Я оплачу картой, и можете выдать мне квитанцию?",
-        colloquial: "Вопрос: «on est arrivés» (мы на месте), «ça fera [X] euros» (к оплате такая сумма). Ответ: «un reçu» (квитанция / чек для бухгалтерии или отчёта).",
+        colloquial: "Вопрос: «on est arrivés» (мы на месте), «ça fera 24 euros» (к оплате 24 евро). Ответ: «un reçu» (квитанция / чек для отчёта).",
         image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80"
       }
     ];
@@ -445,6 +449,18 @@
     let currentIndex = 0;
     let activeDeck = [...curriculum];
     let currentTopic = 'all';
+
+    // Базовое значение темпа речи с безопасным считыванием
+    let currentRate = 0.75;
+    try {
+      const savedRate = localStorage.getItem('french_voice_rate');
+      if (savedRate) {
+        const parsed = parseFloat(savedRate);
+        if (!isNaN(parsed) && parsed >= 0.5 && parsed <= 1.2) {
+          currentRate = parsed;
+        }
+      }
+    } catch (e) {}
 
     const cardContainer = document.getElementById('cardContainer');
     const cardFront = document.getElementById('cardFront');
@@ -482,7 +498,6 @@
       currentIndex = 0;
       haptic('medium');
 
-      // Закрываем меню
       const menu = document.getElementById('topicMenuModal');
       const arrow = document.getElementById('topicArrow');
       if (menu) menu.style.display = 'none';
@@ -491,7 +506,6 @@
       renderCard(currentIndex);
     };
 
-    // Закрытие меню при клике в любое другое место экрана
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('topicMenuModal');
       const btn = document.getElementById('btnTopicMenu');
@@ -532,9 +546,9 @@
       flipCard(false);
     }
 
+    // Ползунок скорости речи
     const speedSlider = document.getElementById('speedSlider');
     const speedLabel = document.getElementById('speedLabel');
-
     let currentAudio = null;
 
     if (speedSlider && speedLabel) {
@@ -554,6 +568,7 @@
       });
     }
 
+    // Платформенные фиксы
     if (!document.querySelector('meta[name="referrer"]')) {
       const meta = document.createElement('meta');
       meta.name = 'referrer';
@@ -571,27 +586,108 @@
     let htmlAudio = null;
     window.currentUtterance = null;
 
-    function playStreamAudio(text, rate) {
+    function stopAllAudio() {
       if (htmlAudio) {
         try { htmlAudio.pause(); } catch(e) {}
         htmlAudio = null;
       }
-      const safeRate = (typeof rate === 'number' && !isNaN(rate)) ? rate : 0.75;
-      const primaryUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=' + encodeURIComponent(text);
-      const fallbackUrl = 'https://api.streamelements.com/kappa/v2/speech?voice=Celine&text=' + encodeURIComponent(text);
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+      }
+    }
 
-      htmlAudio = new Audio(primaryUrl);
-      htmlAudio.playbackRate = safeRate;
-      htmlAudio.onerror = () => {
-        htmlAudio = new Audio(fallbackUrl);
+    // Последовательное воспроизведение диалога через стрим (Android Telegram WebView fallback)
+    function playStreamAudioSequence(firstText, secondText, rate) {
+      stopAllAudio();
+      const safeRate = (typeof rate === 'number' && !isNaN(rate)) ? rate : 0.75;
+      const getTtsUrl = (txt) => 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=' + encodeURIComponent(txt);
+
+      if (firstText && firstText.trim()) {
+        htmlAudio = new Audio(getTtsUrl(firstText));
+        htmlAudio.playbackRate = safeRate;
+        htmlAudio.onended = () => {
+          setTimeout(() => {
+            htmlAudio = new Audio(getTtsUrl(secondText));
+            htmlAudio.playbackRate = safeRate;
+            htmlAudio.play().catch(() => {});
+          }, 500);
+        };
+        htmlAudio.onerror = () => {
+          htmlAudio = new Audio(getTtsUrl(secondText));
+          htmlAudio.playbackRate = safeRate;
+          htmlAudio.play().catch(() => {});
+        };
+        htmlAudio.play().catch(() => {});
+      } else {
+        htmlAudio = new Audio(getTtsUrl(secondText));
         htmlAudio.playbackRate = safeRate;
         htmlAudio.play().catch(() => {});
-      };
-      htmlAudio.play().catch(() => {
-        htmlAudio = new Audio(fallbackUrl);
-        htmlAudio.playbackRate = safeRate;
-        htmlAudio.play().catch(() => {});
-      });
+      }
+    }
+
+    // Воспроизведение диалога: Собеседник -> пауза -> Ваш ответ
+    function playDialogSpeech(partnerText, targetText, rate) {
+      stopAllAudio();
+      const safeRate = (typeof rate === 'number' && !isNaN(rate)) ? rate : 0.75;
+
+      if (isAndroid && isTelegramApp) {
+        playStreamAudioSequence(partnerText, targetText, safeRate);
+        return;
+      }
+
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+        } catch (e) {}
+
+        const targetUtt = new SpeechSynthesisUtterance(targetText);
+        targetUtt.lang = 'fr-FR';
+        targetUtt.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
+        targetUtt.pitch = 1.05;
+
+        // Поиск французских тембров
+        let frVoices = [];
+        try {
+          const voices = window.speechSynthesis.getVoices();
+          if (voices && voices.length > 0) {
+            frVoices = voices.filter(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
+          }
+        } catch(e) {}
+
+        if (frVoices.length > 0 && !isHuawei) {
+          targetUtt.voice = frVoices[frVoices.length > 1 ? 1 : 0];
+        }
+
+        if (partnerText && partnerText.trim()) {
+          const partnerUtt = new SpeechSynthesisUtterance(partnerText);
+          partnerUtt.lang = 'fr-FR';
+          partnerUtt.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
+          partnerUtt.pitch = 0.95; // Чуть глубже тембр собеседника
+
+          if (frVoices.length > 0 && !isHuawei) {
+            partnerUtt.voice = frVoices[0];
+          }
+
+          partnerUtt.onend = () => {
+            setTimeout(() => {
+              window.speechSynthesis.speak(targetUtt);
+            }, 500);
+          };
+
+          partnerUtt.onerror = () => {
+            playStreamAudioSequence(partnerText, targetText, safeRate);
+          };
+
+          window.currentUtterance = partnerUtt;
+          window.speechSynthesis.speak(partnerUtt);
+        } else {
+          window.currentUtterance = targetUtt;
+          window.speechSynthesis.speak(targetUtt);
+        }
+      } else {
+        playStreamAudioSequence(partnerText, targetText, safeRate);
+      }
     }
 
     document.getElementById('btnListen').addEventListener('click', () => {
@@ -602,46 +698,14 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
       } catch (e) {}
 
-      const text = activeDeck[currentIndex].phrase;
-      const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
+      const item = activeDeck[currentIndex];
+      const partner = item.partnerPhrase || "";
+      const phrase = item.phrase;
 
-      if (isAndroid && isTelegramApp) {
-        playStreamAudio(text, safeRate);
-        return;
-      }
-
-      if ('speechSynthesis' in window) {
-        try {
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.resume();
-        } catch (e) {}
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'fr-FR';
-        utterance.rate = isHuawei ? Math.round(safeRate * 10) / 10 : safeRate;
-
-        try {
-          const voices = window.speechSynthesis.getVoices();
-          if (voices && voices.length > 0) {
-            const frVoice = voices.find(v => v.lang === 'fr-FR' || v.lang.startsWith('fr'));
-            if (frVoice && !isHuawei) utterance.voice = frVoice;
-          }
-        } catch(e) {}
-
-        let started = false;
-        utterance.onstart = () => { started = true; };
-        utterance.onerror = () => { playStreamAudio(text, safeRate); };
-        setTimeout(() => {
-          if (!started && !isHuawei) playStreamAudio(text, safeRate);
-        }, 300);
-
-        window.currentUtterance = utterance;
-        window.speechSynthesis.speak(utterance);
-      } else {
-        playStreamAudio(text, safeRate);
-      }
+      playDialogSpeech(partner, phrase, currentRate);
     });
 
+    // Микрофон
     const btnRecord = document.getElementById('btnRecord');
     let isRecording = false;
     let recognition = null;
@@ -650,12 +714,12 @@
 
     function setRecordingUI(active) {
       if (active) {
-        btnRecord.classList.remove('bg-slate-800/90', 'text-teal-400', 'border-slate-700');
-        btnRecord.classList.add('bg-red-500', 'text-white', 'border-red-400', 'recording-pulse');
-        userInput.placeholder = "Слушаю вас...";
+        btnRecord.classList.remove('bg-slate-800/80', 'text-teal-300');
+        btnRecord.classList.add('bg-red-500', 'text-white', 'recording-pulse');
+        userInput.placeholder = "Слушаю ваш ответ...";
       } else {
-        btnRecord.classList.remove('bg-red-500', 'text-white', 'border-red-400', 'recording-pulse');
-        btnRecord.classList.add('bg-slate-800/90', 'text-teal-400', 'border-slate-700');
+        btnRecord.classList.remove('bg-red-500', 'text-white', 'recording-pulse');
+        btnRecord.classList.add('bg-slate-800/80', 'text-teal-300');
         userInput.placeholder = "Нажмите на микрофон и говорите...";
       }
     }
@@ -847,6 +911,7 @@
       flipCard(false);
     });
 
+    // Первоначальный рендер
     renderCard(0);
   </script>
 </body>
