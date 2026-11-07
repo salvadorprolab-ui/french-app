@@ -81,14 +81,42 @@
 </head>
 <body class="h-full h-[100dvh] flex flex-col justify-between p-3 select-none overflow-hidden bg-[#070A11]">
 
-  <!-- Шапка -->
-  <header class="flex items-center justify-between py-1 px-1 border-b border-slate-800/80 flex-shrink-0">
-    <div class="flex items-center gap-2">
-      <span class="w-2.5 h-2.5 rounded-full bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.8)] animate-pulse"></span>
-      <span class="text-xs uppercase tracking-widest font-semibold text-slate-300">Paris • Métro Bastille</span>
+  <!-- Шапка с интерактивным выпадающим меню тем -->
+  <header class="flex items-center justify-between py-1 px-1 border-b border-slate-800/80 flex-shrink-0 z-30 relative">
+    <div class="relative">
+      <button id="btnTopicMenu" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-850 backdrop-blur-md border border-slate-700/80 text-slate-100 text-xs font-semibold active:scale-95 transition-all shadow-md">
+        <span class="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)] animate-pulse"></span>
+        <span id="currentTopicLabel" class="max-w-[150px] sm:max-w-[200px] truncate">✨ Все темы (15)</span>
+        <span class="text-[10px] text-teal-300 ml-0.5">▼</span>
+      </button>
+
+      <!-- Выпадающий список тем (Glassmorphism) -->
+      <div id="topicMenuModal" class="hidden absolute top-9 left-0 w-64 p-1.5 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-slate-700/90 shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 flex flex-col gap-1">
+        <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold text-slate-400 border-b border-slate-800/80">
+          Выберите ситуацию
+        </div>
+        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="all">
+          <span>✨ Все темы</span>
+          <span class="text-[11px] font-mono text-teal-400" id="count-all">15</span>
+        </button>
+        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="bistro">
+          <span>☕ Au bistrot & café</span>
+          <span class="text-[11px] font-mono text-slate-400" id="count-bistro">5</span>
+        </button>
+        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="boulangerie">
+          <span>🥖 Boulangerie & Tabac</span>
+          <span class="text-[11px] font-mono text-slate-400" id="count-boulangerie">5</span>
+        </button>
+        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="taxi">
+          <span>🚕 Dans le taxi</span>
+          <span class="text-[11px] font-mono text-slate-400" id="count-taxi">5</span>
+        </button>
+      </div>
     </div>
+
+    <!-- Счетчик активной колоды -->
     <div class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-slate-700/60 text-teal-300 shadow-inner" id="cardProgress">
-      01 / 03
+      01 / 15
     </div>
   </header>
 
@@ -390,10 +418,59 @@
     ];
 
     let currentIndex = 0;
+    let currentIndex = 0;
+    let activeDeck = [...curriculum];
+    let currentTopic = 'all';
+
     const cardContainer = document.getElementById('cardContainer');
     const cardFront = document.getElementById('cardFront');
     const cardBack = document.getElementById('cardBack');
     const userInput = document.getElementById('userInput');
+
+    // Логика выпадающего меню тем
+    const btnTopicMenu = document.getElementById('btnTopicMenu');
+    const topicMenuModal = document.getElementById('topicMenuModal');
+    const currentTopicLabel = document.getElementById('currentTopicLabel');
+
+    if (btnTopicMenu && topicMenuModal) {
+      btnTopicMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        haptic('light');
+        topicMenuModal.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!topicMenuModal.contains(e.target) && e.target !== btnTopicMenu) {
+          topicMenuModal.classList.add('hidden');
+        }
+      });
+
+      document.querySelectorAll('.topic-option').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const topic = btn.getAttribute('data-topic');
+          currentTopic = topic;
+
+          if (topic === 'all') {
+            activeDeck = [...curriculum];
+            currentTopicLabel.textContent = `✨ Все темы (${activeDeck.length})`;
+          } else {
+            activeDeck = curriculum.filter(item => item.id.startsWith(topic));
+            const topicTitles = {
+              bistro: '☕ Au bistrot',
+              boulangerie: '🥖 Boulangerie',
+              taxi: '🚕 Dans le taxi'
+            };
+            currentTopicLabel.textContent = `${topicTitles[topic] || topic} (${activeDeck.length})`;
+          }
+
+          currentIndex = 0;
+          topicMenuModal.classList.add('hidden');
+          haptic('medium');
+          renderCard(currentIndex);
+        });
+      });
+    }
 
     function flipCard(showBack) {
       if (showBack) {
@@ -408,8 +485,11 @@
     }
 
     function renderCard(index) {
-      const item = curriculum[index];
-      document.getElementById('cardProgress').textContent = `0${index + 1} / 0${curriculum.length}`;
+      if (!activeDeck || activeDeck.length === 0) return;
+      const item = activeDeck[index];
+      const currentNum = index + 1 < 10 ? `0${index + 1}` : `${index + 1}`;
+      const totalNum = activeDeck.length < 10 ? `0${activeDeck.length}` : `${activeDeck.length}`;
+      document.getElementById('cardProgress').textContent = `${currentNum} / ${totalNum}`;
       document.getElementById('sceneImage').src = item.image;
       document.getElementById('sceneContextRu').innerHTML = item.contextRu;
       document.getElementById('targetPhrase').textContent = `"${item.phrase}"`;
@@ -419,17 +499,6 @@
       userInput.value = '';
       flipCard(false);
     }
-
-    let currentRate = 0.75;
-    try {
-      const saved = localStorage.getItem('french_voice_rate');
-      if (saved) {
-        const parsed = parseFloat(saved);
-        if (!isNaN(parsed) && parsed >= 0.5 && parsed <= 1.5) {
-          currentRate = parsed;
-        }
-      }
-    } catch (e) {}
 
     const speedSlider = document.getElementById('speedSlider');
     const speedLabel = document.getElementById('speedLabel');
@@ -501,7 +570,7 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
       } catch (e) {}
 
-      const text = curriculum[currentIndex].phrase;
+      const text = activeDeck[currentIndex].phrase;
       const safeRate = (typeof currentRate === 'number' && !isNaN(currentRate)) ? currentRate : 0.75;
 
       if (isAndroid && isTelegramApp) {
@@ -590,7 +659,7 @@
 
         mediaRecorder.onstop = () => {
           if (!userInput.value.trim()) {
-            userInput.value = curriculum[currentIndex].phrase;
+            userInput.value = activeDeck[currentIndex].phrase;
             haptic('success');
           }
           stopAllRecording();
@@ -606,7 +675,7 @@
     btnRecord.addEventListener('click', async () => {
       if (isRecording) {
         if (!userInput.value.trim()) {
-          userInput.value = curriculum[currentIndex].phrase;
+          userInput.value = activeDeck[currentIndex].phrase;
           haptic('success');
         }
         stopAllRecording();
@@ -702,7 +771,7 @@
       if (isRecording) {
         stopAllRecording();
       }
-      const target = normalizeFrench(curriculum[currentIndex].phrase);
+      const target = normalizeFrench(activeDeck[currentIndex].phrase);
       const user = normalizeFrench(userInput.value);
 
       const lengthRatio = user.length / Math.max(1, target.length);
@@ -713,7 +782,7 @@
         userInput.classList.add('border-emerald-400', 'bg-emerald-950/40');
         setTimeout(() => {
           userInput.classList.remove('border-emerald-400', 'bg-emerald-950/40');
-          currentIndex = (currentIndex + 1) % curriculum.length;
+          currentIndex = (currentIndex + 1) % activeDeck.length;
           renderCard(currentIndex);
         }, 700);
       } else {
