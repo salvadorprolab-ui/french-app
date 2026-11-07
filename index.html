@@ -800,10 +800,11 @@
     });
 
     // ══════════════════════════════════════════════════════════════════
-    // МОДУЛЬ МИКРОФОНА (КЭШИРОВАНИЕ КАНАЛА ДЛЯ ANDROID И HUAWEI)
+    // МОДУЛЬ МИКРОФОНА + ЧИТ-КОДЫ
     // ══════════════════════════════════════════════════════════════════
     const btnRecord = document.getElementById('btnRecord');
     let isRecording = false;
+    let recordStartTime = 0;
     let recognition = null;
     let mediaRecorder = null;
     let audioStream = null;
@@ -820,18 +821,6 @@
       }
     }
 
-    async function getOrCreateAudioStream() {
-      if (audioStream && audioStream.active) {
-        const tracks = audioStream.getAudioTracks();
-        if (tracks.length > 0 && tracks[0].readyState === 'live') {
-          tracks[0].enabled = true;
-          return audioStream;
-        }
-      }
-      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      return audioStream;
-    }
-
     function stopAllRecording() {
       isRecording = false;
       setRecordingUI(false);
@@ -845,35 +834,9 @@
         try { mediaRecorder.stop(); } catch (e) {}
       }
       mediaRecorder = null;
-
-      // Глушим дорожку без уничтожения потока (окно Telegram больше не выскочит)
       if (audioStream) {
-        try {
-          audioStream.getAudioTracks().forEach(t => { t.enabled = false; });
-        } catch (e) {}
-      }
-    }
-
-    async function startMediaCapture() {
-      try {
-        const stream = await getOrCreateAudioStream();
-        stream.getAudioTracks().forEach(t => { t.enabled = true; });
-
-        mediaRecorder = new MediaRecorder(stream);
-
-        mediaRecorder.onstart = () => {
-          isRecording = true;
-          setRecordingUI(true);
-        };
-
-        mediaRecorder.onstop = () => {
-          stopAllRecording();
-        };
-
-        mediaRecorder.start();
-      } catch (err) {
-        stopAllRecording();
-        haptic('error');
+        try { audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        audioStream = null;
       }
     }
 
@@ -881,14 +844,22 @@
       stopAllAudio();
 
       if (isRecording) {
+        const elapsed = Date.now() - recordStartTime;
+        // Если запись шла дольше 400 мс и распознаватель Google не вернул текст (Huawei / Telegram) — подставляем ответ
+        if (elapsed > 400 && !userInput.value.trim()) {
+          userInput.value = activeDeck[currentIndex].phrase;
+          haptic('success');
+        }
         stopAllRecording();
         return;
       }
 
       userInput.value = '';
+      recordStartTime = Date.now();
       haptic('impact');
 
-      if (SpeechRec && !(isAndroid && isTelegramApp)) {
+      // 1. Попытка нативного распознавания (Mac, Chrome)
+      if (SpeechRec) {
         try {
           recognition = new SpeechRec();
           recognition.lang = 'fr-FR';
@@ -905,14 +876,11 @@
             for (let i = event.resultIndex; i < event.results.length; ++i) {
               transcript += event.results[i][0].transcript;
             }
-            if (transcript.trim()) {
-              userInput.value = transcript;
-            }
+            if (transcript.trim()) userInput.value = transcript;
           };
 
           recognition.onerror = () => {
             stopAllRecording();
-            startMediaCapture();
           };
 
           recognition.onend = () => {
@@ -920,13 +888,41 @@
           };
 
           recognition.start();
-        } catch (e) {
-          startMediaCapture();
-        }
-      } else {
-        startMediaCapture();
+          return;
+        } catch (e) {}
+      }
+
+      // 2. Прямой аудиозахват (Huawei, Telegram WebView)
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(audioStream);
+
+        mediaRecorder.onstart = () => {
+          isRecording = true;
+          setRecordingUI(true);
+        };
+
+        mediaRecorder.onstop = () => {
+          stopAllRecording();
+        };
+
+        mediaRecorder.start();
+      } catch (err) {
+        stopAllRecording();
+        haptic('error');
       }
     });
+
+    // ЧИТ-КОД: клик по тексту фразы на карточке сразу заполняет поле ввода
+    const targetPhraseEl = document.getElementById('targetPhrase');
+    if (targetPhraseEl) {
+      targetPhraseEl.style.cursor = 'pointer';
+      targetPhraseEl.addEventListener('click', () => {
+        userInput.value = activeDeck[currentIndex].phrase;
+        haptic('success');
+        userInput.focus();
+      });
+    }
     function normalizeFrench(str) {
       if (!str) return '';
       let s = str.toLowerCase();
