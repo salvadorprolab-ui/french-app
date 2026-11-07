@@ -800,37 +800,24 @@
     });
 
     // ══════════════════════════════════════════════════════════════════
-    // МОДУЛЬ МИКРОФОНА (БЕЗ ПОВТОРНЫХ ЗАПРОСОВ И БЕЗ АВТОПОДСТАНОВКИ ФРАЗЫ)
+    // МОДУЛЬ МИКРОФОНА (СТАБИЛЬНЫЙ РЕЖИМ ДЛЯ GOOGLE CHROME)
     // ══════════════════════════════════════════════════════════════════
     const btnRecord = document.getElementById('btnRecord');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
     let isRecording = false;
     let recognition = null;
-    let mediaRecorder = null;
-    let audioStream = null;
 
     function setRecordingUI(active) {
       if (active) {
         btnRecord.classList.remove('bg-slate-800/80', 'text-teal-300');
         btnRecord.classList.add('bg-red-500', 'text-white', 'recording-pulse');
-        userInput.placeholder = "Слушаю ваш ответ...";
+        userInput.placeholder = "Слушаю вас...";
       } else {
         btnRecord.classList.remove('bg-red-500', 'text-white', 'recording-pulse');
         btnRecord.classList.add('bg-slate-800/80', 'text-teal-300');
         userInput.placeholder = "Нажмите на микрофон и говорите...";
       }
-    }
-
-    // Запрашивает доступ у Telegram ровно 1 раз, затем использует открытый канал
-    async function getOrCreateAudioStream() {
-      if (audioStream && audioStream.active) {
-        const tracks = audioStream.getAudioTracks();
-        if (tracks.length > 0 && tracks[0].readyState === 'live') {
-          tracks[0].enabled = true;
-          return audioStream;
-        }
-      }
-      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      return audioStream;
     }
 
     function stopAllRecording() {
@@ -839,50 +826,21 @@
       haptic('medium');
 
       if (recognition) {
-        try { recognition.abort(); } catch (e) {}
+        try {
+          recognition.onresult = null;
+          recognition.onerror = null;
+          recognition.onend = null;
+          recognition.stop();
+        } catch (e) {}
         recognition = null;
       }
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        try { mediaRecorder.stop(); } catch (e) {}
-      }
-      mediaRecorder = null;
-
-      // Глушим звук без уничтожения потока: окно подтверждения Telegram больше не выскочит
-      if (audioStream) {
-        try {
-          audioStream.getAudioTracks().forEach(t => { t.enabled = false; });
-        } catch (e) {}
-      }
     }
 
-    async function startMediaCapture() {
-      try {
-        const stream = await getOrCreateAudioStream();
-        stream.getAudioTracks().forEach(t => { t.enabled = true; });
-
-        mediaRecorder = new MediaRecorder(stream);
-
-        mediaRecorder.onstart = () => {
-          isRecording = true;
-          setRecordingUI(true);
-        };
-
-        mediaRecorder.onstop = () => {
-          stopAllRecording();
-        };
-
-        mediaRecorder.start();
-      } catch (err) {
-        stopAllRecording();
-        haptic('error');
-      }
-    }
-
-    btnRecord.addEventListener('click', async () => {
+    btnRecord.addEventListener('click', () => {
+      // Клик по микрофону моментально останавливает динамик
       stopAllAudio();
 
       if (isRecording) {
-        // Повторный клик: останавливаем запись. Никаких принудительных подстановок полной фразы!
         stopAllRecording();
         return;
       }
@@ -890,50 +848,54 @@
       userInput.value = '';
       haptic('impact');
 
-      // На Mac и в Chrome работает живой распознаватель речи: пишет ровно то, что сказано
-      if (SpeechRec && !(isAndroid && isTelegramApp)) {
-        try {
-          recognition = new SpeechRec();
-          recognition.lang = 'fr-FR';
-          recognition.continuous = true;
-          recognition.interimResults = true;
+      if (!SpeechRecognition) {
+        alert("В этом браузере не поддерживается встроенное распознавание. Откройте страницу через Google Chrome.");
+        return;
+      }
 
-          recognition.onstart = () => {
-            isRecording = true;
-            setRecordingUI(true);
-          };
+      try {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
 
-          recognition.onresult = (event) => {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-              transcript += event.results[i][0].transcript;
-            }
-            if (transcript.trim()) {
-              userInput.value = transcript;
-            }
-          };
+        recognition.onstart = () => {
+          isRecording = true;
+          setRecordingUI(true);
+        };
 
-          recognition.onerror = () => {
+        recognition.onresult = (event) => {
+          let fullTranscript = '';
+          // Полная сборка фразы от начала до текущего момента без затирания слов
+          for (let i = 0; i < event.results.length; ++i) {
+            fullTranscript += event.results[i][0].transcript;
+          }
+          if (fullTranscript.trim()) {
+            userInput.value = fullTranscript;
+          }
+        };
+
+        recognition.onerror = (event) => {
+          // Игнорируем штатные микропаузы без падения скрипта
+          if (event.error !== 'no-speech') {
             stopAllRecording();
-            startMediaCapture();
-          };
+          }
+        };
 
-          recognition.onend = () => {
-            if (isRecording) stopAllRecording();
-          };
+        recognition.onend = () => {
+          if (isRecording) {
+            stopAllRecording();
+          }
+        };
 
-          recognition.start();
-          return;
-        } catch (e) {
-          startMediaCapture();
-        }
-      } else {
-        // В Telegram WebView на Android и на Huawei используем постоянный аудиопоток
-        startMediaCapture();
+        recognition.start();
+      } catch (err) {
+        stopAllRecording();
       }
     });
 
-    // ЧИТ-КОД: клик по тексту фразы на карточке подставляет предложение целиком для быстрого пролистывания
+    // ЧИТ-КОД: клик по тексту фразы на карточке мгновенно подставляет ответ для тестов
     const targetPhraseEl = document.getElementById('targetPhrase');
     if (targetPhraseEl) {
       targetPhraseEl.style.cursor = 'pointer';
