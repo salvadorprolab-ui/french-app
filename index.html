@@ -84,32 +84,57 @@
   <!-- Шапка с интерактивным выпадающим меню тем -->
   <header class="flex items-center justify-between py-1 px-1 border-b border-slate-800/80 flex-shrink-0 z-30 relative">
     <div class="relative">
-      <button id="btnTopicMenu" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-850 backdrop-blur-md border border-slate-700/80 text-slate-100 text-xs font-semibold active:scale-95 transition-all shadow-md">
+      <button 
+        id="btnTopicMenu" 
+        type="button"
+        onclick="toggleTopicDropdown(event)"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-100 text-xs font-semibold active:scale-95 transition-all shadow-md cursor-pointer"
+      >
         <span class="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)] animate-pulse"></span>
         <span id="currentTopicLabel" class="max-w-[150px] sm:max-w-[200px] truncate">✨ Все темы (15)</span>
-        <span class="text-[10px] text-teal-300 ml-0.5">▼</span>
+        <span id="topicArrow" class="text-[10px] text-teal-300 ml-0.5 transition-transform duration-200">▼</span>
       </button>
 
-      <!-- Выпадающий список тем (Glassmorphism) -->
-      <div id="topicMenuModal" class="hidden absolute top-9 left-0 w-64 p-1.5 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-slate-700/90 shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 flex flex-col gap-1">
+      <!-- Выпадающий список тем (Консоль выбора) -->
+      <div 
+        id="topicMenuModal" 
+        style="display: none;" 
+        class="absolute top-10 left-0 w-64 p-2 rounded-2xl bg-slate-950/95 backdrop-blur-2xl border border-teal-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-50 flex flex-col gap-1.5"
+      >
         <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold text-slate-400 border-b border-slate-800/80">
           Выберите ситуацию
         </div>
-        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="all">
+        <button 
+          type="button"
+          onclick="selectTopic('all', '✨ Все темы')" 
+          class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between"
+        >
           <span>✨ Все темы</span>
-          <span class="text-[11px] font-mono text-teal-400" id="count-all">15</span>
+          <span class="text-[11px] font-mono text-teal-400">15 шт.</span>
         </button>
-        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="bistro">
-          <span>☕ Au bistrot & café</span>
-          <span class="text-[11px] font-mono text-slate-400" id="count-bistro">5</span>
+        <button 
+          type="button"
+          onclick="selectTopic('bistro', '☕ Au bistrot')" 
+          class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between"
+        >
+          <span>☕ Au bistrot</span>
+          <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
         </button>
-        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="boulangerie">
-          <span>🥖 Boulangerie & Tabac</span>
-          <span class="text-[11px] font-mono text-slate-400" id="count-boulangerie">5</span>
+        <button 
+          type="button"
+          onclick="selectTopic('boulangerie', '🥖 Boulangerie')" 
+          class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between"
+        >
+          <span>🥖 Boulangerie</span>
+          <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
         </button>
-        <button class="topic-option text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/80 transition-colors flex items-center justify-between" data-topic="taxi">
+        <button 
+          type="button"
+          onclick="selectTopic('taxi', '🚕 Dans le taxi')" 
+          class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between"
+        >
           <span>🚕 Dans le taxi</span>
-          <span class="text-[11px] font-mono text-slate-400" id="count-taxi">5</span>
+          <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
         </button>
       </div>
     </div>
@@ -418,7 +443,6 @@
     ];
 
     let currentIndex = 0;
-    let currentIndex = 0;
     let activeDeck = [...curriculum];
     let currentTopic = 'all';
 
@@ -427,50 +451,58 @@
     const cardBack = document.getElementById('cardBack');
     const userInput = document.getElementById('userInput');
 
-    // Логика выпадающего меню тем
-    const btnTopicMenu = document.getElementById('btnTopicMenu');
-    const topicMenuModal = document.getElementById('topicMenuModal');
-    const currentTopicLabel = document.getElementById('currentTopicLabel');
+    // Прямое управление выпадающим меню тем
+    window.toggleTopicDropdown = function(e) {
+      if (e) e.stopPropagation();
+      haptic('light');
+      const menu = document.getElementById('topicMenuModal');
+      const arrow = document.getElementById('topicArrow');
+      if (!menu) return;
 
-    if (btnTopicMenu && topicMenuModal) {
-      btnTopicMenu.addEventListener('click', (e) => {
-        e.stopPropagation();
-        haptic('light');
-        topicMenuModal.classList.toggle('hidden');
-      });
+      const isHidden = menu.style.display === 'none' || menu.style.display === '';
+      if (isHidden) {
+        menu.style.display = 'flex';
+        if (arrow) arrow.style.transform = 'rotate(180deg)';
+      } else {
+        menu.style.display = 'none';
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+      }
+    };
 
-      document.addEventListener('click', (e) => {
-        if (!topicMenuModal.contains(e.target) && e.target !== btnTopicMenu) {
-          topicMenuModal.classList.add('hidden');
+    window.selectTopic = function(topic, label) {
+      currentTopic = topic;
+      if (topic === 'all') {
+        activeDeck = [...curriculum];
+        document.getElementById('currentTopicLabel').textContent = `✨ Все темы (${activeDeck.length})`;
+      } else {
+        activeDeck = curriculum.filter(item => item.id.startsWith(topic));
+        document.getElementById('currentTopicLabel').textContent = `${label} (${activeDeck.length})`;
+      }
+
+      currentIndex = 0;
+      haptic('medium');
+
+      // Закрываем меню
+      const menu = document.getElementById('topicMenuModal');
+      const arrow = document.getElementById('topicArrow');
+      if (menu) menu.style.display = 'none';
+      if (arrow) arrow.style.transform = 'rotate(0deg)';
+
+      renderCard(currentIndex);
+    };
+
+    // Закрытие меню при клике в любое другое место экрана
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('topicMenuModal');
+      const btn = document.getElementById('btnTopicMenu');
+      if (menu && menu.style.display === 'flex') {
+        if (!menu.contains(e.target) && !btn.contains(e.target)) {
+          menu.style.display = 'none';
+          const arrow = document.getElementById('topicArrow');
+          if (arrow) arrow.style.transform = 'rotate(0deg)';
         }
-      });
-
-      document.querySelectorAll('.topic-option').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const topic = btn.getAttribute('data-topic');
-          currentTopic = topic;
-
-          if (topic === 'all') {
-            activeDeck = [...curriculum];
-            currentTopicLabel.textContent = `✨ Все темы (${activeDeck.length})`;
-          } else {
-            activeDeck = curriculum.filter(item => item.id.startsWith(topic));
-            const topicTitles = {
-              bistro: '☕ Au bistrot',
-              boulangerie: '🥖 Boulangerie',
-              taxi: '🚕 Dans le taxi'
-            };
-            currentTopicLabel.textContent = `${topicTitles[topic] || topic} (${activeDeck.length})`;
-          }
-
-          currentIndex = 0;
-          topicMenuModal.classList.add('hidden');
-          haptic('medium');
-          renderCard(currentIndex);
-        });
-      });
-    }
+      }
+    });
 
     function flipCard(showBack) {
       if (showBack) {
