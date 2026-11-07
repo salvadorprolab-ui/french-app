@@ -81,7 +81,7 @@
 </head>
 <body class="h-full h-[100dvh] flex flex-col justify-between p-3 select-none overflow-hidden bg-[#070A11]">
 
-  <!-- Шапка с интерактивным выпадающим меню тем (10 тем + тач-прокрутка) -->
+  <!-- Шапка с динамическими счетчиками -->
   <header class="flex items-center justify-between py-1 px-1 border-b border-slate-800/80 flex-shrink-0 z-30 relative">
     <div class="relative">
       <button 
@@ -91,87 +91,85 @@
         class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-100 text-xs font-semibold active:scale-95 transition-all shadow-md cursor-pointer"
       >
         <span class="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)] animate-pulse"></span>
-        <span id="currentTopicLabel" class="max-w-[150px] sm:max-w-[200px] truncate">✨ Все темы (15)</span>
+        <span id="currentTopicLabel" class="max-w-[150px] sm:max-w-[200px] truncate">✨ Все темы</span>
         <span id="topicArrow" class="text-[10px] text-teal-300 ml-0.5 transition-transform duration-200">▼</span>
       </button>
 
-      <!-- Выпадающий список тем: ограничение высоты max-h-[58dvh], поддержка touch-скролла и 10 ситуаций -->
       <div 
         id="topicMenuModal" 
         style="display: none;" 
-        class="absolute top-10 left-0 w-64 max-h-[58dvh] overflow-y-auto overscroll-contain touch-pan-y p-2 rounded-2xl bg-slate-950/95 backdrop-blur-2xl border border-teal-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-50 flex flex-col gap-1.5"
+        class="absolute top-10 left-0 w-64 max-h-[68dvh] overflow-y-auto overscroll-contain touch-pan-y p-2 rounded-2xl bg-slate-950/95 backdrop-blur-2xl border border-teal-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-50 flex flex-col gap-1.5"
       >
         <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold text-slate-400 border-b border-slate-800/80 sticky top-0 bg-slate-950/95 backdrop-blur-md z-10">
           Выберите ситуацию
         </div>
         
-        <!-- 1. Все темы -->
-        <button type="button" onclick="selectTopic('all', '✨ Все темы')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <button type="button" data-topic="all" onclick="selectTopic('all', '✨ Все темы')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>✨ Все темы</span>
-          <span class="text-[11px] font-mono text-teal-400">15 шт.</span>
+          <span class="topic-count text-[11px] font-mono text-teal-400">...</span>
         </button>
 
-        <!-- 2. Кафе и бистро -->
-        <button type="button" onclick="selectTopic('bistro', '☕ Au bistrot')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>☕ Au bistrot</span>
-          <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
+        <button type="button" data-topic="bistro" onclick="selectTopic('bistro', '☕🍽️ Café & Resto')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>☕🍽️ Café & Resto</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
 
-        <!-- 3. Булочная и табак -->
-        <button type="button" onclick="selectTopic('boulangerie', '🥖 Boulangerie')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <button type="button" data-topic="boulangerie" onclick="selectTopic('boulangerie', '🥖 Boulangerie')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>🥖 Boulangerie</span>
-          <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
 
-        <!-- 4. Такси -->
-        <button type="button" onclick="selectTopic('taxi', '🚕 Dans le taxi')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <button type="button" data-topic="taxi" onclick="selectTopic('taxi', '🚕 Dans le taxi')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>🚕 Dans le taxi</span>
-          <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
 
-        <!-- 5. Ресторан -->
-        <button type="button" onclick="selectTopic('resto', '🍽️ Au restaurant')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🍽️ Au restaurant</span>
-          <span class="text-[11px] font-mono text-slate-500">скоро</span>
-        </button>
-
-        <!-- 6. Отель и заселение -->
-        <button type="button" onclick="selectTopic('hotel', '🏨 À l\'hôtel')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <button type="button" data-topic="hotel" onclick="selectTopic('hotel', '🏨 À l\'hôtel')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>🏨 À l'hôtel</span>
-          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
 
-        <!-- 7. Рынок и покупки -->
-        <button type="button" onclick="selectTopic('marche', '🧀 Au marché')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🧀 Au marché</span>
-          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+        <button type="button" data-topic="marche" onclick="selectTopic('marche', '🧀🛒 Marché & Courses')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🧀🛒 Marché & Courses</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
 
-        <!-- 8. Метро и транспорт -->
-        <button type="button" onclick="selectTopic('metro', '🚇 Dans le métro')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🚇 Dans le métro</span>
-          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+        <button type="button" data-topic="transport" onclick="selectTopic('transport', '🚇🚌 Transports')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🚇🚌 Transports</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
 
-        <!-- 9. Музей и выставка -->
-        <button type="button" onclick="selectTopic('musee', '🎨 Au musée')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🎨 Au musée</span>
-          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+        <button type="button" data-topic="art" onclick="selectTopic('art', '🎨🎬 Art & Sorties')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🎨🎬 Art & Sorties</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
 
-        <!-- 10. Аптека -->
-        <button type="button" onclick="selectTopic('pharmacie', '💊 À la pharmacie')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>💊 À la pharmacie</span>
-          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+        <button type="button" data-topic="sante" onclick="selectTopic('sante', '💊🏥 Pharmacie & Santé')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>💊🏥 Pharmacie & Santé</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
+        </button>
+
+        <button type="button" data-topic="rue" onclick="selectTopic('rue', '🗺️ Dans la rue')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🗺️ Dans la rue</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
+        </button>
+
+        <button type="button" data-topic="gares" onclick="selectTopic('gares', '🚆✈️ Gares & Aéroports')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🚆✈️ Gares & Aéroports</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
+        </button>
+
+        <button type="button" data-topic="business" onclick="selectTopic('business', '💼 Affaires & Travail')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>💼 Affaires & Travail</span>
+          <span class="topic-count text-[11px] font-mono text-slate-400">...</span>
         </button>
       </div>
     </div>
 
-    <!-- Счетчик активной колоды -->
     <div class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-slate-700/60 text-teal-300 shadow-inner" id="cardProgress">
-      01 / 15
+      01 / 01
     </div>
-  </header>
+</header>
 
   <!-- Интерактивная карточка (Полноэкранный стиль) -->
   <main class="flex-1 flex flex-col justify-center py-1 min-h-0 perspective-1000">
@@ -317,7 +315,9 @@
     };
 
     const curriculum = [
-      // СИТУАЦИЯ 1: Кафе и бистро (Au bistrot)
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 1: Кафе и рестораны (Café & Resto)
+      // ══════════════════════════════════════════════════════════════════
       {
         id: "bistro_001",
         partnerPhrase: "Sur place ou à emporter ?",
@@ -325,7 +325,7 @@
         phonetic: "/a ɑ̃.pɔʁ.te sil vu plɛ | ʒə sɥi œ̃ pø pʁe.se/",
         contextRu: "Бариста: Sur place ou à emporter ?<br>(Здесь или с собой?)",
         translation: "С собой, пожалуйста. Я немного спешу.",
-        colloquial: "Вопрос: «sur place» (на месте) или «à emporter» (с собой на вынос). Ответ: «pressé» (в спешке / тороплюсь). В Париже часто сокращают до «chuis un peu pressé».",
+        colloquial: "Вопрос: «sur place» (на месте) или «à emporter» (с собой). В быстрой парижской речи «Je suis» часто редуцируется до «chuis» (/ʃɥi/).",
         image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -335,7 +335,7 @@
         phonetic: "/sɛ kwa sa | ʒə vɛ vu pʁɑ̃dʁ yn pa.tis.ʁi ɑ̃ plys/",
         contextRu: "Официант: Et avec ceci ? Ce sera tout ?<br>(И к этому? Это всё?)",
         translation: "А это что такое? Возьму у вас ещё вон то пирожное.",
-        colloquial: "Вопрос: «avec ceci» (к этому?), «ce sera tout» (это всё?). Ответ: «C'est quoi ça ?» (живое «что это такое?»), оборот «en plus» (вдобавок / сверху).",
+        colloquial: "«Avec ceci» (к этому?), «ce sera tout» (это всё?). Чанк «en plus» используется для любого добавления к текущему заказу.",
         image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -345,7 +345,7 @@
         phonetic: "/ʒə mɑ̃ʒ syʁ plas | la tabl la.ba ɛ libʁ/",
         contextRu: "Официант: Vous vous installez où ?<br>(Где вы присядете?)",
         translation: "Я поем здесь. Вон тот столик свободен?",
-        colloquial: "Вопрос: глагол «s'installer» (садиться), «où» (где). Ответ: «sur place» (на месте), указатель «là-bas» (вон там), «libre» (свободен).",
+        colloquial: "«Là-bas» — вон там. На конце слова «libre» (/libʁ/) звук «re» произносится очень мягко и приглушенно.",
         image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -353,9 +353,9 @@
         partnerPhrase: "Une boisson avec le menu ?",
         phrase: "Remettez-moi une canette de coca bien fraîche, s'il vous plaît.",
         phonetic: "/ʁə.mɛ.te mwa yn ka.nɛt də kɔ.ka bjɛ̃ fʁɛʃ sil vu plɛ/",
-        contextRu: "Бариста: Une boisson avec le menu ?<br>(Напиток к заказу?)",
+        contextRu: "Бариста: Une boisson avec le menu ?<br>(Напиток к комплексному меню?)",
         translation: "Повторите мне ещё баночку холодной колы, пожалуйста.",
-        colloquial: "Вопрос: «boisson» (напиток), «menu» (комплекс/обед). Ответ: «remettez-moi» (повторите / докиньте ещё), «canette» (банка), «bien fraîche» (холодная).",
+        colloquial: "«Remettez-moi» — разговорная форма «повторите / налейте ещё». Оборот «bien fraîche» подчеркивает приятную прохладу напитка.",
         image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -365,19 +365,21 @@
         phonetic: "/la.di.sjɔ̃ sil vu plɛ | ʒə pø pe.je paʁ kaʁt/",
         contextRu: "Официант: Ça vous a plu ?<br>(Вам всё понравилось?)",
         translation: "Счёт, пожалуйста. Могу я оплатить картой?",
-        colloquial: "Вопрос: «Ça vous a plu ?» (Вам понравилось?). Ответ: «l'addition» (счёт), способ оплаты — «par carte» (картой) или «sans contact» (бесконтактно).",
+        colloquial: "«L'addition» — счёт в ресторане. Бесконтактную оплату картой или смартфоном называют «sans contact».",
         image: "https://images.unsplash.com/photo-1445116572660-238429888259?auto=format&fit=crop&w=800&q=80"
       },
 
-      // СИТУАЦИЯ 2: Булочная и табачный киоск (Boulangerie & Tabac)
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 2: Булочная и кондитерская (Boulangerie)
+      // ══════════════════════════════════════════════════════════════════
       {
         id: "boulangerie_001",
         partnerPhrase: "Bonjour ! Qu'est-ce qu'il vous faudra ?",
         phrase: "Une tradition bien cuite et deux croissants, s'il vous plaît.",
         phonetic: "/yn tʁa.di.sjɔ̃ bjɛ̃ kɥit e dø kʁwa.sɑ̃ sil vu plɛ/",
-        contextRu: "Продавец: Qu'est-ce qu'il vous faudra ?<br>(Что для вас?)",
+        contextRu: "Продавец: Bonjour ! Qu'est-ce qu'il vous faudra ?<br>(Здравствуйте! Что для вас?)",
         translation: "Один багет-традисьон позажаристее и два круассана, пожалуйста.",
-        colloquial: "Вопрос: «Qu'est-ce qu'il vous faudra ?» (Что вам потребуется?). Ответ: «tradition» (традиционный багет), «bien cuite» (позажаристее с корочкой).",
+        colloquial: "«Une tradition» — классический хрустящий багет. «Bien cuite» означает с зажаристой корочкой (антоним: «pas trop cuite»).",
         image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -385,9 +387,9 @@
         partnerPhrase: "Et avec ça, ce sera tout ?",
         phrase: "Ajoutez-moi une part de pizza aussi, s'il vous plaît.",
         phonetic: "/a.ʒu.te mwa yn paʁ də pid.za o.si sil vu plɛ/",
-        contextRu: "Продавец: Et avec ça, ce sera tout ?<br>(И к этому всё?)",
+        contextRu: "Продавец: Et avec ça, ce sera tout ?<br>(И к этому, это всё?)",
         translation: "Добавьте мне ещё кусок пиццы, пожалуйста.",
-        colloquial: "Вопрос: «ce sera tout ?» (это всё?). Ответ: «ajoutez-moi» (добавьте мне), «une part de...» (порционный кусок пиццы или пирога quiche).",
+        colloquial: "«Une part de...» — порционный кусок пиццы или пирога (quiche). Связка «Ajoutez-moi» звучит вежливо и непринужденно.",
         image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -395,9 +397,9 @@
         partnerPhrase: "Monsieur ? Vous désirez ?",
         phrase: "Un paquet de blondes et un briquet avec ça, s'te plaît.",
         phonetic: "/œ̃ pa.kɛ də blɔ̃d e œ̃ bʁi.kɛ a.vɛk sa stə plɛ/",
-        contextRu: "Продавец Tabac: Monsieur ? Vous désirez ?<br>(Месье? Что желаете?)",
+        contextRu: "Продавец: Monsieur ? Vous désirez ?<br>(Месье? Что желаете?)",
         translation: "Пачку светлых сигарет и зажигалку к этому, пожалуйста.",
-        colloquial: "Вопрос: «Vous désirez ?» (Что желаете?). Ответ: «blondes» (светлый табак), «un briquet» (зажигалка), разговорное «s'te plaît».",
+        colloquial: "«S'te plaît» — быстрая уличная редукция от вежливого «s'il vous plaît / s'il te plaît». «Un briquet» — зажигалка.",
         image: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -405,9 +407,9 @@
         partnerPhrase: "C'est pour consommer tout de suite ?",
         phrase: "Oui, vous pouvez me la chauffer deux minutes ?",
         phonetic: "/wi vu pu.ve mə la ʃo.fe dø mi.nyt/",
-        contextRu: "Продавец: C'est pour consommer tout de suite ?<br>(Будете есть прямо сейчас?)",
+        contextRu: "Продавец: C'est pour consommer tout de suite ?<br>(Будете есть сразу на ходу?)",
         translation: "Да, можете подогреть мне это на пару минут?",
-        colloquial: "Вопрос: «consommer tout de suite» (съесть сразу на ходу). Ответ: короткий глагол «chauffer» вместо длинного «réchauffer au micro-ondes».",
+        colloquial: "В пекарнях вместо громоздкого «réchauffer au micro-ondes» используют короткое действие «chauffer».",
         image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -415,13 +417,15 @@
         partnerPhrase: "Vous avez de la monnaie ?",
         phrase: "Gardez la monnaie, et pas besoin de sac, merci !",
         phonetic: "/ɡaʁ.de la mɔ.nɛ e pa bə.zwɛ̃ də sak mɛʁ.si/",
-        contextRu: "Продавец: Vous avez de la monnaie ?<br>(У вас есть мелочь?)",
+        contextRu: "Продавец: Vous avez de la monnaie ?<br>(У вас найдется мелочь?)",
         translation: "Оставьте сдачу себе, и пакет не нужен, спасибо!",
-        colloquial: "Вопрос: «la monnaie» (мелочь / сдача). Ответ: «gardez la monnaie» (оставьте сдачу себе), «pas besoin de...» (не нужно).",
+        colloquial: "«Gardez la monnaie» — оставить сдачу продавцу. Чанк «pas besoin de...» универсален для отказа от пакетов и чеков.",
         image: "https://images.unsplash.com/photo-1556742049-0a67e557224f?auto=format&fit=crop&w=800&q=80"
       },
 
-      // СИТУАЦИЯ 3: В такси (Dans le taxi parisien)
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 3: В такси (Dans le taxi)
+      // ══════════════════════════════════════════════════════════════════
       {
         id: "taxi_001",
         partnerPhrase: "Bonjour, vous allez où ?",
@@ -429,7 +433,7 @@
         phonetic: "/a la ɡaʁ də ljɔ̃ sil vu plɛ | ɔ̃.n‿ɑ̃.n‿a puʁ lɔ̃.tɑ̃/",
         contextRu: "Водитель: Bonjour, vous allez où ?<br>(Здравствуйте, куда едем?)",
         translation: "На Лионский вокзал, пожалуйста. Долго нам ехать?",
-        colloquial: "Вопрос: «vous allez où ?» (куда едем?). Ответ: оборот «On en a pour longtemps ?» — живая связка («Сколько по времени займёт поездка?»).",
+        colloquial: "Конструкция «On en a pour longtemps ?» — идиоматический оборот: «Сколько по времени займёт поездка?» со связыванием «on-en-a».",
         image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -439,7 +443,7 @@
         phonetic: "/ʒə sɥi œ̃ pø a la buʁ | ja mwa.jɛ̃ də kɔ̃.tuʁ.ne/",
         contextRu: "Водитель: Ça coince un peu sur les quais ce matin.<br>(На набережных утром затор.)",
         translation: "Я немного опаздываю, есть вариант объехать?",
-        colloquial: "Вопрос: «ça coince» (пробка на дороге). Ответ: «être à la bourre» (опаздывать), «y a moyen de...» (есть ли возможность объехать?).",
+        colloquial: "«Être à la bourre» — разговорный сленг (сильно опаздывать). Оборот «y a moyen de...» означает «есть ли возможность/лазейка».",
         image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -449,7 +453,7 @@
         phonetic: "/vu pu.ve bɛ.se œ̃ pø la vitʁ u mɛtʁ la klim/",
         contextRu: "Водитель: Il commence à faire lourd dehors.<br>(На улице становится душно.)",
         translation: "Можете опустить немного стекло или включить кондиционер?",
-        colloquial: "Вопрос: «faire lourd» (душный воздух). Ответ: «baisser la vitre» (опустить боковое стекло авто), «la clim» (кондиционер).",
+        colloquial: "«Faire lourd» — про душный воздух. «La clim» — общепринятое разговорное сокращение от «climatisation».",
         image: "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -459,18 +463,451 @@
         phonetic: "/lɛ.se mwa ʒyst o kwɛ̃ də la ʁy | sa i.ʁa tʁɛ bjɛ̃/",
         contextRu: "Водитель: Je vous dépose juste devant l'entrée ?<br>(Высадить прямо перед входом?)",
         translation: "Высадите меня прямо на углу улицы, так будет отлично.",
-        colloquial: "Вопрос: «déposer quelqu'un» (высадить пассажира). Ответ: «au coin de la rue» (на углу), согласие «ça ira très bien» (так отлично подойдёт).",
+        colloquial: "«Déposer quelqu'un» — высадить пассажира. Связка «ça ira très bien» — универсальное выражение согласия.",
         image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=80"
       },
       {
         id: "taxi_005",
         partnerPhrase: "Voilà, on est arrivés ! Ça fera vingt-quatre euros.",
-        phrase: "Je paye par carte, et vous можете me sortir un reçu ?".replace("можете", "pouvez"),
+        phrase: "Je paye par carte, et vous pouvez me sortir un reçu ?",
         phonetic: "/ʒə pɛj paʁ kaʁt e vu pu.ve mə sɔʁ.tiʁ œ̃ ʁə.sy/",
-        contextRu: "Водитель: Voilà, on est arrivés ! Ça fera 24 euros.<br>(Приехали! С вас 24 евро.)",
+        contextRu: "Водитель: Voilà, on est arrivés ! Ça fera vingt-quatre euros.<br>(Приехали! С вас двадцать четыре евро.)",
         translation: "Я оплачу картой, и можете выдать мне квитанцию?",
-        colloquial: "Вопрос: «on est arrivés» (мы на месте), «ça fera 24 euros» (к оплате 24 евро). Ответ: «un reçu» (квитанция / чек для отчёта).",
+        colloquial: "«Sortir un reçu» — разговорная фраза распечатать/выдать чек. Терминалы оплаты картой во всех парижских такси обязательны.",
         image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 4: Отель и заселение (À l'hôtel)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "hotel_001",
+        partnerPhrase: "Bonjour monsieur, vous avez une réservation ?",
+        phrase: "Oui, au nom de Jean. Une chambre double pour trois nuits.",
+        phonetic: "/wi o nɔ̃ də ʒɑ̃ | yn ʃɑ̃bʁ dubl puʁ tʁwa nɥi/",
+        contextRu: "Администратор: Bonjour monsieur, vous avez une réservation ?<br>(Здравствуйте, месье! У вас бронирование?)",
+        translation: "Да, на имя Жан. Двухместный номер на три ночи.",
+        colloquial: "Формула «au nom de...» — стандартная фраза заселения. «Chambre double» означает номер с одной большой двуспальной кроватью.",
+        image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "hotel_002",
+        partnerPhrase: "Voici votre clé, chambre deux cent quatre.",
+        phrase: "Merci. C'est à quelle heure le check-out demain ?",
+        phonetic: "/mɛʁ.si | sɛ a kɛl œʁ lə tʃɛk.awt də.mɛ̃/",
+        contextRu: "Администратор: Voici votre clé, chambre deux cent quatre.<br>(Вот ваш ключ, комната двести четыре.)",
+        translation: "Спасибо. Во сколько завтра выезд?",
+        colloquial: "Вместо длинного «l'heure limite de départ» во всех французских отелях используют общепринятый термин «le check-out».",
+        image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "hotel_003",
+        partnerPhrase: "Autre chose pour votre séjour ?",
+        phrase: "Quel est le code du wifi, s'il vous plaît ?",
+        phonetic: "/kɛl ɛ lə kɔd dy wi.fi sil vu plɛ/",
+        contextRu: "Администратор: Autre chose pour votre séjour ?<br>(Что-то ещё для вашего отдыха?)",
+        translation: "Подскажите пароль от вай-фая, пожалуйста.",
+        colloquial: "Французы произносят «wifi» исключительно как «wee-fee» (/wi.fi/), а не «вай-фай».",
+        image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "hotel_004",
+        partnerPhrase: "Réception, j'écoute ?",
+        phrase: "Il n'y a plus d'eau chaude dans la douche.",
+        phonetic: "/il nja ply do ʃod dɑ̃ la duʃ/",
+        contextRu: "Ресепшн: Réception, j'écoute ?<br>(Ресепшн, слушаю вас?)",
+        translation: "В душе закончилась горячая вода.",
+        colloquial: "Конструкция «Il n'y a plus de...» означает «больше нет / закончилось». В разговорной речи «ne» часто выпадает: «Y a plus d'eau».",
+        image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "hotel_005",
+        partnerPhrase: "Vous devez libérer la chambre à midi.",
+        phrase: "Je peux laisser ma valise à la consigne jusqu'à ce soir ?",
+        phonetic: "/ʒə pø lɛ.se ma va.liz a la kɔ̃.siɲ ʒys.ka sə swaʁ/",
+        contextRu: "Администратор: Vous devez libérer la chambre à midi.<br>(Вам нужно освободить номер в полдень.)",
+        translation: "Могу я оставить чемодан в камере хранения до вечера?",
+        colloquial: "«La consigne» — багажная комната отеля. Оборот «jusqu'à ce soir» означает «до сегодняшнего вечера».",
+        image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 5: Рынок и супермаркет (Marché & Courses)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "marche_001",
+        partnerPhrase: "Il est bien affiné celui-ci. Vous en voulez combien ?",
+        phrase: "Mettez-m'en un bon morceau, pas trop fait, s'il vous plaît.",
+        phonetic: "/mɛ.te mɑ̃ œ̃ bɔ̃ mɔʁ.so | pa tʁo fɛ sil vu plɛ/",
+        contextRu: "Сырный торговец: Il est bien affiné celui-ci. Vous en voulez combien ?<br>(Этот отлично созрел. Сколько вам положить?)",
+        translation: "Положите мне хороший кусок, не слишком резкий, пожалуйста.",
+        colloquial: "«Pas trop fait» — профессиональный сырный термин: достаточно созревший, но не чересчур пахучий и жидкий внутри.",
+        image: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "marche_002",
+        partnerPhrase: "Mes fraises sont super sucrées aujourd'hui !",
+        phrase: "Je peux goûter avant de vous en prendre une barquette ?",
+        phonetic: "/ʒə pø ɡu.te a.vɑ̃ də vu.z‿ɑ̃ pʁɑ̃dʁ yn baʁ.kɛt/",
+        contextRu: "Продавец фруктов: Mes fraises sont super sucrées aujourd'hui !<br>(Моя клубника сегодня очень сладкая!)",
+        translation: "Можно попробовать перед тем, как взять корзинку?",
+        colloquial: "На французских рынках пробовать товар («goûter») — абсолютно обычная практика. «Une barquette» — корзинка или лоток ягод.",
+        image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "marche_003",
+        partnerPhrase: "Monsieur, il faut peser les légumes là-bas.",
+        phrase: "Ah pardon, quel est le numéro pour ces tomates ?",
+        phonetic: "/a paʁ.dɔ̃ | kɛl ɛ lə ny.me.ʁo puʁ se tɔ.mat/",
+        contextRu: "Работник зала: Monsieur, il faut peser les légumes là-bas.<br>(Месье, овощи нужно взвесить вон там.)",
+        translation: "А, извините, какой номер на весах для этих помидоров?",
+        colloquial: "Во французских супермаркетах овощи всегда взвешивают сами покупатели на весах самообслуживания по номеру с ценника.",
+        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "marche_004",
+        partnerPhrase: "Vous cherchez quelque chose en rayon ?",
+        phrase: "Le rayon pour la lessive et le savon, c'est par où ?",
+        phonetic: "/lə ʁɛ.jɔ̃ puʁ la lɛ.siv e lə sa.vɔ̃ | sɛ paʁ u/",
+        contextRu: "Консультант: Vous cherchez quelque chose en rayon ?<br>(Ищете что-то в торговом зале?)",
+        translation: "Где находится отдел со стиральным порошком и мылом?",
+        colloquial: "«Le rayon» — тематический отдел в супермаркете. Чанк «c'est par où ?» означает «в какую сторону идти?»",
+        image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "marche_005",
+        partnerPhrase: "La caisse automatique est libre ici.",
+        phrase: "Ça prend les espèces ou c'est juste par carte ?",
+        phonetic: "/sa pʁɑ̃ le.z‿ɛs.pɛs u sɛ ʒyst paʁ kaʁt/",
+        contextRu: "Кассир: La caisse automatique est libre ici.<br>(Касса самообслуживания свободна здесь.)",
+        translation: "Она принимает наличные или только оплату картой?",
+        colloquial: "«Les espèces» — наличные деньги. На терминалах во Франции часто указано «CB uniquement» (только банковские карты).",
+        image: "https://images.unsplash.com/photo-1556742049-0a67e557224f?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 6: Общественный транспорт (Transports)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "transport_001",
+        partnerPhrase: "Bonjour, vous désirez un carnet ou un pass ?",
+        phrase: "Un pass Navigo pour la semaine, s'il vous plaît.",
+        phonetic: "/œ̃ pas na.vi.ɡo puʁ la sə.mɛn sil vu plɛ/",
+        contextRu: "Кассир метро: Bonjour, vous désirez un carnet ou un pass ?<br>(Здравствуйте, желаете билеты или проездной?)",
+        translation: "Проездной Навиго на неделю, пожалуйста.",
+        colloquial: "«Pass Navigo» — единая электронная карта Парижа. Недельный тариф действует строго с понедельника по воскресенье.",
+        image: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "transport_002",
+        partnerPhrase: "Attention à la fermeture des portes.",
+        phrase: "Pardon, ce train va bien en direction de Nation ?",
+        phonetic: "/paʁ.dɔ̃ | sə tʁɛ̃ va bjɛ̃ ɑ̃ di.ʁɛk.sjɔ̃ də na.sjɔ̃/",
+        contextRu: "Диктор метро: Attention à la fermeture des portes.<br>(Осторожно, двери закрываются.)",
+        translation: "Простите, этот поезд точно идёт в сторону Насьон?",
+        colloquial: "В парижском метро направление движения всегда обозначается конечной станцией линии: «en direction de...».",
+        image: "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "transport_003",
+        partnerPhrase: "Le bus est complet, avancez vers le fond !",
+        phrase: "Vous pouvez ouvrir la porte arrière au prochain arrêt ?",
+        phonetic: "/vu pu.ve u.vʁiʁ la pɔʁt a.ʁjɛʁ o pʁɔ.ʃɛ̃ a.ʁɛ/",
+        contextRu: "Водитель: Le bus est complet, avancez vers le fond !<br>(Автобус полон, проходите назад!)",
+        translation: "Можете открыть заднюю дверь на следующей остановке?",
+        colloquial: "В автобусах Парижа посадка происходит через переднюю дверь, а высадка — строго через среднюю или заднюю («la porte arrière»).",
+        image: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "transport_004",
+        partnerPhrase: "La ligne une est ralentie ce matin.",
+        phrase: "Où est la correspondance pour la ligne quatre ?",
+        phonetic: "/u ɛ la kɔ.ʁɛs.pɔ̃.dɑ̃s puʁ la liɲ katʁ/",
+        contextRu: "Служащий: La ligne une est ralentie ce matin.<br>(Движение по первой линии замедлено.)",
+        translation: "Где переход на четвёртую ветку?",
+        colloquial: "«La correspondance» — официальный и разговорный термин для любой пересадки между линиями метро или пригородных поездов RER.",
+        image: "https://images.unsplash.com/photo-1520106212299-d99c443e4568?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "transport_005",
+        partnerPhrase: "Votre ticket ne passe pas au portillon.",
+        phrase: "Je dois le badger où pour valider mon trajet ?",
+        phonetic: "/ʒə dwa lə bad.ʒe u puʁ va.li.de mɔ̃ tʁa.ʒɛ/",
+        contextRu: "Контролёр: Votre ticket ne passe pas au portillon.<br>(Ваш билет не срабатывает на турникете.)",
+        translation: "Где нужно приложить карту, чтобы валидировать поездку?",
+        colloquial: "Глагол «badger» (/bad.ʒe/) повсеместно используется во Франции в значении «приложить проездной к считывателю».",
+        image: "https://images.unsplash.com/photo-1509749837427-ac94a2553d0e?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 7: Арт, музеи и досуг (Art & Sorties)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "art_001",
+        partnerPhrase: "Bonjour, c'est pour l'exposition permanente ?",
+        phrase: "Deux billets plein tarif pour l'expo temporaire, s'il vous plaît.",
+        phonetic: "/dø bi.jɛ plɛ̃ ta.ʁif puʁ lɛks.po tɑ̃.pɔ.ʁɛʁ sil vu plɛ/",
+        contextRu: "Кассир музея: Bonjour, c'est pour l'exposition permanente ?<br>(Здравствуйте, вы на постоянную экспозицию?)",
+        translation: "Два билета по полному тарифу на временную выставку, пожалуйста.",
+        colloquial: "«Plein tarif» — взрослый билет без льгот. «L'expo» — общепринятое сокращение от «exposition».",
+        image: "https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "art_002",
+        partnerPhrase: "Le vestiaire est sur votre gauche.",
+        phrase: "Est-ce que vous avez un audioguide en anglais ou en russe ?",
+        phonetic: "/ɛs kə vu.z‿a.ve œ̃.n‿o.djo.ɡid ɑ̃.n‿ɑ̃.ɡlɛ u ɑ̃ ʁys/",
+        contextRu: "Служащий: Le vestiaire est sur votre gauche.<br>(Гардероб слева от вас.)",
+        translation: "У вас есть аудиогид на английском или на русском?",
+        colloquial: "Связка «un audioguide» произносится с обязательным сцеплением согласного звука: /œ̃.n‿o.djo.ɡid/.",
+        image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "art_003",
+        partnerPhrase: "Il reste des places pour la séance de vingt heures.",
+        phrase: "Deux places au milieu de la salle, c'est en version originale ?",
+        phonetic: "/dø plas o mi.ljø də la sal | sɛ ɑ̃ vɛʁ.zjɔ̃ ɔ.ʁi.ʒi.nal/",
+        contextRu: "Кассир кино: Il reste des places pour la séance de vingt heures.<br>(Есть места на сеанс в двадцать часов.)",
+        translation: "Два места по центру зала, фильм на языке оригинала?",
+        colloquial: "В кинотеатрах «VOST» или «VO» означает фильм на языке оригинала с субтитрами, тогда как «VF» — французский дубляж.",
+        image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "art_004",
+        partnerPhrase: "Attention monsieur, pas de flash ici.",
+        phrase: "D'accord, mais on a le droit de prendre des photos sans flash ?",
+        phonetic: "/da.kɔʁ | mɛ ɔ̃.n‿a lə dʁwa də pʁɑ̃dʁ de fo.to sɑ̃ flaʃ/",
+        contextRu: "Смотритель зала: Attention monsieur, pas de flash ici.<br>(Внимание, месье, здесь фотосъемка со вспышкой запрещена.)",
+        translation: "Хорошо, а без вспышки фотографировать разрешено?",
+        colloquial: "Оборот «avoir le droit de...» — базовая языковая конструкция для выяснения правил: «иметь право делать что-то».",
+        image: "https://images.unsplash.com/photo-1544531585-9847b68c8c86?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "art_005",
+        partnerPhrase: "Les sacs à dos volumineux sont interdits.",
+        phrase: "Je peux déposer mon sac à dos au vestiaire ?",
+        phonetic: "/ʒə pø de.po.ze mɔ̃ sak a do o vɛs.tjɛʁ/",
+        contextRu: "Охрана музея: Les sacs à dos volumineux sont interdits.<br>(Большие рюкзаки проносить запрещено.)",
+        translation: "Могу я сдать свой рюкзак в гардероб?",
+        colloquial: "«Déposer au vestiaire» — сдать вещи или пальто в гардероб музея.",
+        image: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 8: Аптека и здоровье (Pharmacie & Santé)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "sante_001",
+        partnerPhrase: "Bonjour, qu'est-ce qui vous arrive ?",
+        phrase: "J'ai la gorge qui brûle et un peu de fièvre depuis hier.",
+        phonetic: "/ʒe la ɡɔʁʒ ki bʁyl e œ̃ pø də fjɛvʁ də.pɥi jɛʁ/",
+        contextRu: "Фармацевт: Bonjour, qu'est-ce qui vous arrive ?<br>(Здравствуйте, на что жалуетесь?)",
+        translation: "У меня дерёт горло и со вчерашнего дня небольшая температура.",
+        colloquial: "«Avoir la gorge qui brûle» — живое бытовое описание воспаления в горле. «Depuis hier» — со вчерашнего дня.",
+        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "sante_002",
+        partnerPhrase: "Vous avez une ordonnance du médecin ?",
+        phrase: "Non, vous avez quelque chose de sans ordonnance contre le rhume ?",
+        phonetic: "/nɔ̃ | vu.z‿a.ve kɛl.kə ʃoz də sɑ̃.z‿ɔʁ.dɔ.nɑ̃s kɔ̃tʁ lə ʁym/",
+        contextRu: "Аптекарь: Vous avez une ordonnance du médecin ?<br>(У вас есть рецепт от врача?)",
+        translation: "Нет, у вас есть что-нибудь без рецепта от простуды?",
+        colloquial: "«Sans ordonnance» — без рецепта. Во Франции большинство эффективных препаратов отпускаются строго по рецепту («sur ordonnance»).",
+        image: "https://images.unsplash.com/photo-1576602976047-174e57a47881?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "sante_003",
+        partnerPhrase: "Prenez ce sirop avant de dormir.",
+        phrase: "Combien de fois par jour et avant ou après le repas ?",
+        phonetic: "/kɔ̃.bjɛ̃ də fwa paʁ ʒuʁ e a.vɑ̃ u a.pʁɛ lə ʁə.pa/",
+        contextRu: "Фармацевт: Prenez ce sirop avant de dormir.<br>(Принимайте этот сироп перед сном.)",
+        translation: "Сколько раз в день и до или после еды?",
+        colloquial: "«Combien de fois par jour» — ключевой вопрос для уточнения дозировки медикаментов.",
+        image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "sante_004",
+        partnerPhrase: "Il vous faut autre chose avec ça ?",
+        phrase: "Une boîte de pansements et un spray désinfectant, s'il vous plaît.",
+        phonetic: "/yn bwat də pɑ̃s.mɑ̃ e œ̃ spʁɛ de.zɛ̃.fɛk.tɑ̃ sil vu plɛ/",
+        contextRu: "Аптекарь: Il vous faut autre chose avec ça ?<br>(Вам нужно что-то ещё к этому?)",
+        translation: "Упаковку лейкопластырей и дезинфицирующий спрей, пожалуйста.",
+        colloquial: "«Des pansements» (/pɑ̃s.mɑ̃/) — лейкопластыри от мозолей и порезов.",
+        image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "sante_005",
+        partnerPhrase: "La douleur est apparue quand ?",
+        phrase: "J'ai mal au ventre, vous avez des comprimés pour digérer ?",
+        phonetic: "/ʒe mal o vɑ̃tʁ | vu.z‿a.ve de kɔ̃.pʁi.me puʁ di.ʒe.ʁe/",
+        contextRu: "Врач / Провизор: La douleur est apparue quand ?<br>(Когда появилась боль?)",
+        translation: "У меня болит живот, у вас есть таблетки для пищеварения?",
+        colloquial: "«Avoir mal au ventre» — боль в области живота. «Des comprimés» — таблетки.",
+        image: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 9: На улице и навигация (Dans la rue)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "rue_001",
+        partnerPhrase: "Oui ? Je peux vous renseigner ?",
+        phrase: "Pardon, pour aller au métro le plus proche, c'est par où ?",
+        phonetic: "/paʁ.dɔ̃ | puʁ a.le o me.tʁo lə ply pʁɔʃ | sɛ paʁ u/",
+        contextRu: "Прохожий: Oui ? Je peux vous renseigner ?<br>(Да? Вам подсказать дорогу?)",
+        translation: "Простите, в какую сторону идти к ближайшей станции метро?",
+        colloquial: "Формула «Pour aller à... c'est par où ?» — самый естественный способ спросить дорогу на французской улице.",
+        image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "rue_002",
+        partnerPhrase: "Vous continuez tout droit jusqu'au carrefour.",
+        phrase: "C'est loin d'ici à pied ou il vaut mieux prendre le bus ?",
+        phonetic: "/sɛ lwɛ̃ di.si a pje u il vo mjø pʁɑ̃dʁ lə bys/",
+        contextRu: "Прохожий: Vous continuez tout droit jusqu'au carrefour.<br>(Идите прямо до перекрёстка.)",
+        translation: "Это далеко отсюда пешком или лучше поехать на автобусе?",
+        colloquial: "«À pied» — пешком. Оборот «il vaut mieux...» используется для выбора более удобного действия.",
+        image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "rue_003",
+        partnerPhrase: "Vous cherchez une rue en particulier ?",
+        phrase: "Je suis perdu, vous можете me montrer où on est sur le plan ?",
+        phrase: "Je suis perdu, vous pouvez me montrer où on est sur le plan ?",
+        phonetic: "/ʒə sɥi pɛʁ.dy | vu pu.ve mə mɔ̃.tʁe u ɔ̃.n‿ɛ syʁ lə plɑ̃/",
+        contextRu: "Прохожий: Vous cherchez une rue en particulier ?<br>(Вы ищете какую-то конкретную улицу?)",
+        translation: "Я заблудился, можете показать на карте, где мы находимся?",
+        colloquial: "«Je suis perdu» — «я заблудился». Словом «le plan» французы называют карту города или района.",
+        image: "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "rue_004",
+        partnerPhrase: "C'est juste derrière la grande poste.",
+        phrase: "D'accord, donc je tourne à gauche après la boulangerie ?",
+        phonetic: "/da.kɔʁ | dɔ̃k ʒə tuʁn a ɡoʃ a.pʁɛ la bu.lɑ̃ʒ.ʁi/",
+        contextRu: "Прохожий: C'est juste derrière la grande poste.<br>(Это прямо позади главного почтамта.)",
+        translation: "Понял, значит я поворачиваю налево сразу после булочной?",
+        colloquial: "«Tourner à gauche / à droite» — повернуть налево / направо. «Donc» связывает предложение со значением «стало быть».",
+        image: "https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "rue_005",
+        partnerPhrase: "Vous avez encore dix minutes de marche.",
+        phrase: "Merci bien pour votre aide ! Bonne journée à vous.",
+        phonetic: "/mɛʁ.si bjɛ̃ puʁ vɔtʁ ɛd | bɔn ʒuʁ.ne a vu/",
+        contextRu: "Прохожий: Vous avez encore dix minutes de marche.<br>(Вам ещё минут десять пешком.)",
+        translation: "Большое спасибо за помощь! Хорошего вам дня.",
+        colloquial: "«Bonne journée à vous» — стандарт вежливости при завершении диалога с прохожим.",
+        image: "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 10: Вокзалы, аэропорты и порты (Gares & Aéroports)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "gares_001",
+        partnerPhrase: "Bonjour, votre passeport s'il vous plaît. Vous avez des bagages à enregistrer ?",
+        phrase: "Juste une valise en soute et ce sac à dos en cabine.",
+        phonetic: "/ʒyst yn va.liz ɑ̃ sut e sə sak a do ɑ̃ ka.bin/",
+        contextRu: "Регистрация: Bonjour, votre passeport s'il vous plaît. Vous avez des bagages à enregistrer ?<br>(Здравствуйте, ваш паспорт, пожалуйста. Сдаете багаж?)",
+        translation: "Только один чемодан в багаж и вот этот рюкзак в салон.",
+        colloquial: "«En soute» — сдать в багажное отделение самолета. «En cabine» — ручная кладь с собой в салон.",
+        image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "gares_002",
+        partnerPhrase: "L'embarquement du vol pour Nice va bientôt commencer.",
+        phrase: "Pardon, la porte d'embarquement a changé ou c'est toujours la B douze ?",
+        phonetic: "/paʁ.dɔ̃ | la pɔʁt dɑ̃.baʁ.kə.mɑ̃ a ʃɑ̃.ʒe u sɛ tu.ʒuʁ la be duz/",
+        contextRu: "Служащий аэропорта: L'embarquement du vol pour Nice va bientôt commencer.<br>(Посадка на рейс до Ниццы скоро начнется.)",
+        translation: "Простите, выход на посадку изменился или это по-прежнему Б двенадцать?",
+        colloquial: "«La porte d'embarquement» — выход на посадку (гейт) в аэропорту.",
+        image: "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "gares_003",
+        partnerPhrase: "Le train à grande vitesse pour Marseille est à quai.",
+        phrase: "Sur quelle voie part le TGV et où se trouve la voiture numéro quatre ?",
+        phonetic: "/syʁ kɛl vwa paʁ lə te.ʒe.ve e u sə tʁuv la vwa.tyʁ ny.me.ʁo katʁ/",
+        contextRu: "Диктор вокзала: Le train à grande vitesse pour Marseille est à quai.<br>(Скоростной поезд на Марсель подан к платформе.)",
+        translation: "С какого пути отправляется TGV и где находится вагон номер четыре?",
+        colloquial: "На французских вокзалах путь поезда — это «la voie», а пассажирский вагон называют «la voiture» (слово «wagon» используется для грузов).",
+        image: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "gares_004",
+        partnerPhrase: "Présentez vos billets pour l'accès au ferry.",
+        phrase: "L'accès piéton pour monter à bord du bateau, c'est par cette passerelle ?",
+        phonetic: "/lak.sɛ pje.tɔ̃ puʁ mɔ̃.te a bɔʁ dy ba.to | sɛ paʁ sɛt pa.sə.ʁɛl/",
+        contextRu: "Контроль на пароме: Présentez vos billets pour l'accès au ferry.<br>(Предъявите ваши билеты для прохода на паром.)",
+        translation: "Проход для пеших пассажиров на борт судна через этот трап?",
+        colloquial: "«Accès piéton» — проход без машины. «Monter à bord» — подняться на борт судна.",
+        image: "https://images.unsplash.com/photo-1505705694340-019e1e335916?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "gares_005",
+        partnerPhrase: "Vous avez trois heures d'escale avant votre départ.",
+        phrase: "Où sont les casiers pour laisser mes bagages pendant la correspondance ?",
+        phonetic: "/u sɔ̃ le ka.zje puʁ lɛ.se me ba.ɡaʒ pɑ̃.dɑ̃ la kɔ.ʁɛs.pɔ̃.dɑ̃s/",
+        contextRu: "Дежурный вокзала: Vous avez trois heures d'escale avant votre départ.<br>(У вас три часа пересадки до отправления.)",
+        translation: "Где находятся камеры хранения, чтобы оставить вещи во время пересадки?",
+        colloquial: "«Les casiers» — автоматические ячейки камеры хранения. «La correspondance» — стыковка рейсов или поездов.",
+        image: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80"
+      },
+
+      // ══════════════════════════════════════════════════════════════════
+      // СИТУАЦИЯ 11: Бизнес и деловые встречи (Affaires & Travail)
+      // ══════════════════════════════════════════════════════════════════
+      {
+        id: "business_001",
+        partnerPhrase: "Nous sommes d'accord sur tous les points du projet.",
+        phrase: "Parfait, on signe le contrat aujourd'hui ou vous m'envoyez la version finale ?",
+        phonetic: "/paʁ.fɛ | ɔ̃ siɲ lə kɔ̃.tʁa o.ʒuʁ.dɥi u vu mɑ̃.vwa.je la vɛʁ.zjɔ̃ fi.nal/",
+        contextRu: "Партнер: Nous sommes d'accord sur tous les points du projet.<br>(Мы согласны по всем пунктам проекта.)",
+        translation: "Отлично, мы подписываем договор сегодня или вы пришлёте финальную версию?",
+        colloquial: "«Signer le contrat» — подписать договор. «Version finale» — согласованная чистовая редакция документа.",
+        image: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "business_002",
+        partnerPhrase: "Je vous prépare le récapitulatif avec les devis.",
+        phrase: "Envoyez-moi tout ça par mail, je vous réponds avant la fin de journée.",
+        phonetic: "/ɑ̃.vwa.je mwa tu sa paʁ mɛl | ʒə vu ʁe.pɔ̃ a.vɑ̃ la fɛ̃ də ʒuʁ.ne/",
+        contextRu: "Подрядчик: Je vous prépare le récapitulatif avec les devis.<br>(Я подготовлю вам сводку со сметами.)",
+        translation: "Отправьте мне всё по почте, я отвечу вам до конца рабочего дня.",
+        colloquial: "Во Франции обычно говорят «par mail». «Avant la fin de journée» — стандартный деловой срок ответа в течение рабочего дня.",
+        image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "business_003",
+        partnerPhrase: "Il faut qu'on cale un créneau pour fixer les détails.",
+        phrase: "On se fait un point en visio demain matin à dix heures, ça vous va ?",
+        phonetic: "/ɔ̃ sə fɛ œ̃ pwɛ̃ ɑ̃ vi.zjo də.mɛ̃ ma.tɛ̃ a di.z‿œʁ | sa vu va/",
+        contextRu: "Клиент: Il faut qu'on cale un créneau pour fixer les détails.<br>(Нам нужно согласовать время встречи, чтобы зафиксировать детали.)",
+        translation: "Давайте созвонимся по видеосвязи завтра утром в десять, вам подходит?",
+        colloquial: "«Faire un point en visio» — популярнейшее современное выражение во французских компаниях (созвониться по Zoom/Teams). «Ça vous va ?» — вам подходит?",
+        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "business_004",
+        partnerPhrase: "Ravi d'avoir fait votre connaissance lors de cette réunion.",
+        phrase: "Voici mes coordonnées et mon numéro direct, restons en contact.",
+        phonetic: "/vwa.si me kɔ.ɔʁ.dɔ.ne e mɔ̃ ny.me.ʁo di.ʁɛkt | ʁɛs.tɔ̃.z‿ɑ̃ kɔ̃.takt/",
+        contextRu: "Партнер: Ravi d'avoir fait votre connaissance lors de cette réunion.<br>(Очень рад знакомству с вами на этой встрече.)",
+        translation: "Вот мои контакты и прямой номер телефона, будем на связи.",
+        colloquial: "«Mes coordonnées» — контакты / реквизиты. «Restons en contact» — классическое деловое прощание.",
+        image: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "business_005",
+        partnerPhrase: "La prestation est validée, je vous transmets la facture.",
+        phrase: "C'est bien noté, je fais suivre la facture à notre service comptabilité.",
+        phonetic: "/sɛ bjɛ̃ nɔ.te | ʒə fɛ sɥivʁ la fak.tyʁ a nɔtʁ sɛʁ.vis kɔ̃p.ta.bi.li.te/",
+        contextRu: "Исполнитель: La prestation est validée, je vous transmets la facture.<br>(Услуга принята, направляю вам счёт.)",
+        translation: "Принято, я пересылаю счёт в нашу бухгалтерию.",
+        colloquial: "«Faire suivre» — переслать письмо или документ коллегам. «Le service comptabilité» — бухгалтерия.",
+        image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80"
       }
     ];
 
@@ -513,6 +950,34 @@
       }
     };
 
+    // Функция автоматического сканирования и подсчета базы карточек
+    function updateTopicCounters() {
+      const buttons = document.querySelectorAll('#topicMenuModal button[data-topic]');
+      buttons.forEach(btn => {
+        const topic = btn.getAttribute('data-topic');
+        const countSpan = btn.querySelector('.topic-count');
+        if (!countSpan) return;
+
+        if (topic === 'all') {
+          countSpan.textContent = `${curriculum.length} шт.`;
+          countSpan.className = 'topic-count text-[11px] font-mono text-teal-400';
+        } else {
+          // Считает реальное число карточек темы (любое: 1, 5, 20 или 0)
+          const count = curriculum.filter(item => item.id.startsWith(topic)).length;
+          if (count > 0) {
+            countSpan.textContent = `${count} шт.`;
+            countSpan.className = 'topic-count text-[11px] font-mono text-slate-400';
+          } else {
+            countSpan.textContent = 'скоро';
+            countSpan.className = 'topic-count text-[11px] font-mono text-slate-500';
+          }
+        }
+      });
+
+      // Автоматическая установка общего количества на главной кнопке
+      document.getElementById('currentTopicLabel').textContent = `✨ Все темы (${curriculum.length})`;
+    }
+
     window.selectTopic = function(topic, label) {
       currentTopic = topic;
       if (topic === 'all') {
@@ -524,7 +989,7 @@
           activeDeck = filtered;
           document.getElementById('currentTopicLabel').textContent = `${label} (${activeDeck.length})`;
         } else {
-          // Если карточки темы еще не загружены, оставляем текущую колоду и выводим индикатор
+          activeDeck = [];
           document.getElementById('currentTopicLabel').textContent = `${label} (0)`;
         }
       }
@@ -567,8 +1032,8 @@
     function renderCard(index) {
       if (!activeDeck || activeDeck.length === 0) return;
       const item = activeDeck[index];
-      const currentNum = index + 1 < 10 ? `0${index + 1}` : `${index + 1}`;
-      const totalNum = activeDeck.length < 10 ? `0${activeDeck.length}` : `${activeDeck.length}`;
+      const currentNum = String(index + 1).padStart(2, '0');
+      const totalNum = String(activeDeck.length).padStart(2, '0');
       document.getElementById('cardProgress').textContent = `${currentNum} / ${totalNum}`;
       document.getElementById('sceneImage').src = item.image;
       document.getElementById('sceneContextRu').innerHTML = item.contextRu;
@@ -578,6 +1043,65 @@
       document.getElementById('backColloquial').textContent = item.colloquial;
       userInput.value = '';
       flipCard(false);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // НАВИГАЦИЯ СВАЙПАМИ (ВЛЕВО / ВПРАВО) БЕЗ ВЫЛЕТА TELEGRAM
+    // ══════════════════════════════════════════════════════════════════
+    function nextCard() {
+      if (!activeDeck || activeDeck.length <= 1) return;
+      stopAllAudio();
+      currentIndex = (currentIndex + 1) % activeDeck.length;
+      haptic('light');
+      renderCard(currentIndex);
+    }
+
+    function prevCard() {
+      if (!activeDeck || activeDeck.length <= 1) return;
+      stopAllAudio();
+      currentIndex = (currentIndex - 1 + activeDeck.length) % activeDeck.length;
+      haptic('light');
+      renderCard(currentIndex);
+    }
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    const gestureZone = document.getElementById('cardContainer');
+
+    if (gestureZone) {
+      gestureZone.addEventListener('touchstart', (e) => {
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SVG' || tag === 'PATH') return;
+
+        touchStartX = e.changedTouches[0].clientX;
+        touchStartY = e.changedTouches[0].clientY;
+      }, { passive: true });
+
+      gestureZone.addEventListener('touchend', (e) => {
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SVG' || tag === 'PATH') return;
+
+        touchEndX = e.changedTouches[0].clientX;
+        touchEndY = e.changedTouches[0].clientY;
+
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+
+        // Защита от системного жеста "Назад" в Telegram
+        if (touchStartX < 35) return;
+
+        // Распознавание горизонтального свайпа
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
+          if (diffX < 0) {
+            nextCard();
+          } else {
+            prevCard();
+          }
+        }
+      }, { passive: true });
     }
 
     // Ползунок скорости речи
@@ -800,19 +1324,19 @@
     });
 
     // ══════════════════════════════════════════════════════════════════
-    // МОДУЛЬ МИКРОФОНА
+    // МОДУЛЬ МИКРОФОНА (СТАБИЛЬНЫЙ РЕЖИМ ДЛЯ GOOGLE CHROME)
     // ══════════════════════════════════════════════════════════════════
     const btnRecord = document.getElementById('btnRecord');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
     let isRecording = false;
     let recognition = null;
-    let mediaRecorder = null;
-    let audioStream = null;
 
     function setRecordingUI(active) {
       if (active) {
         btnRecord.classList.remove('bg-slate-800/80', 'text-teal-300');
         btnRecord.classList.add('bg-red-500', 'text-white', 'recording-pulse');
-        userInput.placeholder = "Слушаю ваш ответ...";
+        userInput.placeholder = "Слушаю вас...";
       } else {
         btnRecord.classList.remove('bg-red-500', 'text-white', 'recording-pulse');
         btnRecord.classList.add('bg-slate-800/80', 'text-teal-300');
@@ -826,46 +1350,21 @@
       haptic('medium');
 
       if (recognition) {
-        try { recognition.abort(); } catch (e) {}
+        try {
+          recognition.onresult = null;
+          recognition.onerror = null;
+          recognition.onend = null;
+          recognition.stop();
+        } catch (e) {}
         recognition = null;
       }
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        try { mediaRecorder.stop(); } catch (e) {}
-      }
-      mediaRecorder = null;
-      if (audioStream) {
-        try { audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
-        audioStream = null;
-      }
     }
 
-    async function startMediaCapture() {
-      try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(audioStream);
-
-        mediaRecorder.onstart = () => {
-          isRecording = true;
-          setRecordingUI(true);
-        };
-
-        mediaRecorder.onstop = () => {
-          // Запись остановлена: никаких подстановок текста ответа
-          stopAllRecording();
-        };
-
-        mediaRecorder.start();
-      } catch (err) {
-        stopAllRecording();
-        haptic('error');
-      }
-    }
-
-    btnRecord.addEventListener('click', async () => {
+    btnRecord.addEventListener('click', () => {
+      // Клик по микрофону моментально останавливает динамик
       stopAllAudio();
 
       if (isRecording) {
-        // Повторный клик: останавливаем запись. Поле остаётся пустым, если ничего не сказано
         stopAllRecording();
         return;
       }
@@ -873,45 +1372,63 @@
       userInput.value = '';
       haptic('impact');
 
-      if (SpeechRec) {
-        try {
-          recognition = new SpeechRec();
-          recognition.lang = 'fr-FR';
-          recognition.continuous = true;
-          recognition.interimResults = true;
+      if (!SpeechRecognition) {
+        alert("В этом браузере не поддерживается встроенное распознавание. Откройте страницу через Google Chrome.");
+        return;
+      }
 
-          recognition.onstart = () => {
-            isRecording = true;
-            setRecordingUI(true);
-          };
+      try {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
 
-          recognition.onresult = (event) => {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-              transcript += event.results[i][0].transcript;
-            }
-            if (transcript.trim()) {
-              userInput.value = transcript;
-            }
-          };
+        recognition.onstart = () => {
+          isRecording = true;
+          setRecordingUI(true);
+        };
 
-          recognition.onerror = () => {
+        recognition.onresult = (event) => {
+          let fullTranscript = '';
+          // Полная сборка фразы от начала до текущего момента без затирания слов
+          for (let i = 0; i < event.results.length; ++i) {
+            fullTranscript += event.results[i][0].transcript;
+          }
+          if (fullTranscript.trim()) {
+            userInput.value = fullTranscript;
+          }
+        };
+
+        recognition.onerror = (event) => {
+          // Игнорируем штатные микропаузы без падения скрипта
+          if (event.error !== 'no-speech') {
             stopAllRecording();
-            startMediaCapture();
-          };
+          }
+        };
 
-          recognition.onend = () => {
-            if (isRecording) stopAllRecording();
-          };
+        recognition.onend = () => {
+          if (isRecording) {
+            stopAllRecording();
+          }
+        };
 
-          recognition.start();
-        } catch (e) {
-          startMediaCapture();
-        }
-      } else {
-        startMediaCapture();
+        recognition.start();
+      } catch (err) {
+        stopAllRecording();
       }
     });
+
+    // ЧИТ-КОД: клик по тексту фразы на карточке мгновенно подставляет ответ для тестов
+    const targetPhraseEl = document.getElementById('targetPhrase');
+    if (targetPhraseEl) {
+      targetPhraseEl.style.cursor = 'pointer';
+      targetPhraseEl.addEventListener('click', () => {
+        userInput.value = activeDeck[currentIndex].phrase;
+        haptic('success');
+        userInput.focus();
+      });
+    }
     function normalizeFrench(str) {
       if (!str) return '';
       let s = str.toLowerCase();
@@ -1005,6 +1522,7 @@
     });
 
     // Первоначальный рендер
+    updateTopicCounters();
     renderCard(0);
   </script>
 </body>
