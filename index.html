@@ -81,7 +81,7 @@
 </head>
 <body class="h-full h-[100dvh] flex flex-col justify-between p-3 select-none overflow-hidden bg-[#070A11]">
 
-  <!-- Шапка с интерактивным выпадающим меню тем (10 тем + тач-прокрутка) -->
+  <!-- Шапка с меню на 12 плашек (9 плашек на виду + тач-скролл) -->
   <header class="flex items-center justify-between py-1 px-1 border-b border-slate-800/80 flex-shrink-0 z-30 relative">
     <div class="relative">
       <button 
@@ -95,79 +95,90 @@
         <span id="topicArrow" class="text-[10px] text-teal-300 ml-0.5 transition-transform duration-200">▼</span>
       </button>
 
-      <!-- Выпадающий список тем: ограничение высоты max-h-[58dvh], поддержка touch-скролла и 10 ситуаций -->
+      <!-- Выпадающий список тем: 12 плашек, 9 на виду, плавная прокрутка -->
       <div 
         id="topicMenuModal" 
         style="display: none;" 
-        class="absolute top-10 left-0 w-64 max-h-[58dvh] overflow-y-auto overscroll-contain touch-pan-y p-2 rounded-2xl bg-slate-950/95 backdrop-blur-2xl border border-teal-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-50 flex flex-col gap-1.5"
+        class="absolute top-10 left-0 w-64 max-h-[68dvh] overflow-y-auto overscroll-contain touch-pan-y p-2 rounded-2xl bg-slate-950/95 backdrop-blur-2xl border border-teal-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-50 flex flex-col gap-1.5"
       >
         <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold text-slate-400 border-b border-slate-800/80 sticky top-0 bg-slate-950/95 backdrop-blur-md z-10">
           Выберите ситуацию
         </div>
         
         <!-- 1. Все темы -->
-        <button type="button" onclick="selectTopic('all', '✨ Все темы')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <button type="button" onclick="selectTopic('all', '✨ Все темы')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>✨ Все темы</span>
           <span class="text-[11px] font-mono text-teal-400">15 шт.</span>
         </button>
 
-        <!-- 2. Кафе и бистро -->
-        <button type="button" onclick="selectTopic('bistro', '☕ Au bistrot')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>☕ Au bistrot</span>
+        <!-- 2. Кафе и рестораны -->
+        <button type="button" onclick="selectTopic('bistro', '☕🍽️ Café & Resto')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>☕🍽️ Café & Resto</span>
           <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
         </button>
 
-        <!-- 3. Булочная и табак -->
-        <button type="button" onclick="selectTopic('boulangerie', '🥖 Boulangerie')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <!-- 3. Булочная и кондитерская -->
+        <button type="button" onclick="selectTopic('boulangerie', '🥖 Boulangerie')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>🥖 Boulangerie</span>
           <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
         </button>
 
-        <!-- 4. Такси -->
-        <button type="button" onclick="selectTopic('taxi', '🚕 Dans le taxi')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <!-- 4. Такси и поездки -->
+        <button type="button" onclick="selectTopic('taxi', '🚕 Dans le taxi')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>🚕 Dans le taxi</span>
           <span class="text-[11px] font-mono text-slate-400">5 шт.</span>
         </button>
 
-        <!-- 5. Ресторан -->
-        <button type="button" onclick="selectTopic('resto', '🍽️ Au restaurant')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🍽️ Au restaurant</span>
-          <span class="text-[11px] font-mono text-slate-500">скоро</span>
-        </button>
-
-        <!-- 6. Отель и заселение -->
-        <button type="button" onclick="selectTopic('hotel', '🏨 À l\'hôtel')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+        <!-- 5. Отель и заселение -->
+        <button type="button" onclick="selectTopic('hotel', '🏨 À l\'hôtel')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
           <span>🏨 À l'hôtel</span>
           <span class="text-[11px] font-mono text-slate-500">скоро</span>
         </button>
 
-        <!-- 7. Рынок и покупки -->
-        <button type="button" onclick="selectTopic('marche', '🧀 Au marché')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🧀 Au marché</span>
+        <!-- 6. Рынок и супермаркет -->
+        <button type="button" onclick="selectTopic('marche', '🧀🛒 Marché & Courses')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🧀🛒 Marché & Courses</span>
           <span class="text-[11px] font-mono text-slate-500">скоро</span>
         </button>
 
-        <!-- 8. Метро и транспорт -->
-        <button type="button" onclick="selectTopic('metro', '🚇 Dans le métro')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🚇 Dans le métro</span>
+        <!-- 7. Общественный транспорт -->
+        <button type="button" onclick="selectTopic('transport', '🚇🚌 Transports')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🚇🚌 Transports</span>
           <span class="text-[11px] font-mono text-slate-500">скоро</span>
         </button>
 
-        <!-- 9. Музей и выставка -->
-        <button type="button" onclick="selectTopic('musee', '🎨 Au musée')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>🎨 Au musée</span>
+        <!-- 8. Арт, музеи и досуг -->
+        <button type="button" onclick="selectTopic('art', '🎨🎬 Art & Sorties')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🎨🎬 Art & Sorties</span>
           <span class="text-[11px] font-mono text-slate-500">скоро</span>
         </button>
 
-        <!-- 10. Аптека -->
-        <button type="button" onclick="selectTopic('pharmacie', '💊 À la pharmacie')" class="topic-btn text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
-          <span>💊 À la pharmacie</span>
+        <!-- 9. Аптека и здоровье -->
+        <button type="button" onclick="selectTopic('sante', '💊🏥 Pharmacie & Santé')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>💊🏥 Pharmacie & Santé</span>
+          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+        </button>
+
+        <!-- 10. На улице и навигация -->
+        <button type="button" onclick="selectTopic('rue', '🗺️ Dans la rue')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🗺️ Dans la rue</span>
+          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+        </button>
+
+        <!-- 11. Вокзалы, аэропорты и порты -->
+        <button type="button" onclick="selectTopic('gares', '🚆✈️ Gares & Aéroports')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>🚆✈️ Gares & Aéroports</span>
+          <span class="text-[11px] font-mono text-slate-500">скоро</span>
+        </button>
+
+        <!-- 12. Бизнес и деловые встречи -->
+        <button type="button" onclick="selectTopic('business', '💼 Affaires & Travail')" class="topic-btn text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-100 bg-slate-900/80 hover:bg-teal-500/20 active:bg-teal-500/30 border border-slate-800 transition-all flex items-center justify-between flex-shrink-0">
+          <span>💼 Affaires & Travail</span>
           <span class="text-[11px] font-mono text-slate-500">скоро</span>
         </button>
       </div>
     </div>
 
-    <!-- Счетчик активной колоды -->
     <div class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-slate-700/60 text-teal-300 shadow-inner" id="cardProgress">
       01 / 15
     </div>
