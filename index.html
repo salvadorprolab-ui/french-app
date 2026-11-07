@@ -800,7 +800,7 @@
     });
 
     // ══════════════════════════════════════════════════════════════════
-    // МОДУЛЬ МИКРОФОНА
+    // МОДУЛЬ МИКРОФОНА (ПЕРЕИСПОЛЬЗОВАНИЕ ПОТОКА БЕЗ ПОВТОРНЫХ ОКОН)
     // ══════════════════════════════════════════════════════════════════
     const btnRecord = document.getElementById('btnRecord');
     let isRecording = false;
@@ -820,6 +820,19 @@
       }
     }
 
+    // Запрашивает доступ один раз, затем использует уже открытый канал
+    async function getOrCreateAudioStream() {
+      if (audioStream && audioStream.active) {
+        const tracks = audioStream.getAudioTracks();
+        if (tracks.length > 0 && tracks[0].readyState === 'live') {
+          tracks[0].enabled = true;
+          return audioStream;
+        }
+      }
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      return audioStream;
+    }
+
     function stopAllRecording() {
       isRecording = false;
       setRecordingUI(false);
@@ -833,16 +846,20 @@
         try { mediaRecorder.stop(); } catch (e) {}
       }
       mediaRecorder = null;
+
+      // Не вызываем track.stop(), а только выключаем прием звука.
+      // Это сохраняет сессию активной и предотвращает появление окна Telegram.
       if (audioStream) {
-        try { audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
-        audioStream = null;
+        try {
+          audioStream.getAudioTracks().forEach(t => { t.enabled = false; });
+        } catch (e) {}
       }
     }
 
     async function startMediaCapture() {
       try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(audioStream);
+        const stream = await getOrCreateAudioStream();
+        mediaRecorder = new MediaRecorder(stream);
 
         mediaRecorder.onstart = () => {
           isRecording = true;
@@ -850,7 +867,6 @@
         };
 
         mediaRecorder.onstop = () => {
-          // Запись остановлена: никаких подстановок текста ответа
           stopAllRecording();
         };
 
@@ -865,7 +881,6 @@
       stopAllAudio();
 
       if (isRecording) {
-        // Повторный клик: останавливаем запись. Поле остаётся пустым, если ничего не сказано
         stopAllRecording();
         return;
       }
