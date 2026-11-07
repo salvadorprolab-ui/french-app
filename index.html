@@ -1032,8 +1032,8 @@
     function renderCard(index) {
       if (!activeDeck || activeDeck.length === 0) return;
       const item = activeDeck[index];
-      const currentNum = index + 1 < 10 ? `0${index + 1}` : `${index + 1}`;
-      const totalNum = activeDeck.length < 10 ? `0${activeDeck.length}` : `${activeDeck.length}`;
+      const currentNum = String(index + 1).padStart(2, '0');
+      const totalNum = String(activeDeck.length).padStart(2, '0');
       document.getElementById('cardProgress').textContent = `${currentNum} / ${totalNum}`;
       document.getElementById('sceneImage').src = item.image;
       document.getElementById('sceneContextRu').innerHTML = item.contextRu;
@@ -1043,6 +1043,65 @@
       document.getElementById('backColloquial').textContent = item.colloquial;
       userInput.value = '';
       flipCard(false);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // НАВИГАЦИЯ СВАЙПАМИ (ВЛЕВО / ВПРАВО) БЕЗ ВЫЛЕТА TELEGRAM
+    // ══════════════════════════════════════════════════════════════════
+    function nextCard() {
+      if (!activeDeck || activeDeck.length <= 1) return;
+      stopAllAudio();
+      currentIndex = (currentIndex + 1) % activeDeck.length;
+      haptic('light');
+      renderCard(currentIndex);
+    }
+
+    function prevCard() {
+      if (!activeDeck || activeDeck.length <= 1) return;
+      stopAllAudio();
+      currentIndex = (currentIndex - 1 + activeDeck.length) % activeDeck.length;
+      haptic('light');
+      renderCard(currentIndex);
+    }
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    const gestureZone = document.getElementById('cardContainer');
+
+    if (gestureZone) {
+      gestureZone.addEventListener('touchstart', (e) => {
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SVG' || tag === 'PATH') return;
+
+        touchStartX = e.changedTouches[0].clientX;
+        touchStartY = e.changedTouches[0].clientY;
+      }, { passive: true });
+
+      gestureZone.addEventListener('touchend', (e) => {
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SVG' || tag === 'PATH') return;
+
+        touchEndX = e.changedTouches[0].clientX;
+        touchEndY = e.changedTouches[0].clientY;
+
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+
+        // Защита от системного жеста "Назад" в Telegram
+        if (touchStartX < 35) return;
+
+        // Распознавание горизонтального свайпа
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
+          if (diffX < 0) {
+            nextCard();
+          } else {
+            prevCard();
+          }
+        }
+      }, { passive: true });
     }
 
     // Ползунок скорости речи
