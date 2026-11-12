@@ -273,9 +273,6 @@
           </div>
         </div>
 
-        <button id="btnFlipBack" class="w-full py-3.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-slate-100 text-sm font-bold border border-slate-700/80 active:scale-95 transition-all shadow-lg flex-shrink-0">
-          ← Вернуться к фразе
-        </button>
       </div>
 
     </div>
@@ -1513,16 +1510,18 @@
 
     document.getElementById('btnPass').addEventListener('click', () => {
       haptic('medium');
-      flipCard(true);
-    });
+      const container = document.getElementById('cardContainer');
+      const back = document.getElementById('cardBack');
+      if (!container) return;
 
-    document.getElementById('btnFlipBack').addEventListener('click', () => {
-      haptic('light');
-      flipCard(false);
+      const isFlipped = container.classList.contains('card-flipped');
+      if (typeof flipCard === 'function') {
+        flipCard(!isFlipped);
+      } else {
+        container.classList.toggle('card-flipped');
+        if (back) back.classList.toggle('pointer-events-none');
+      }
     });
-
-    // Первоначальный рендер
-    updateTopicCounters();
     renderCard(0);
   </script>
 </body>
