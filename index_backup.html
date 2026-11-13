@@ -252,30 +252,21 @@
       </div>
 
       <!-- Тыльная сторона -->
-      <div id="cardBack" class="card-back pointer-events-none absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-b from-[#131B2B] to-[#0A0E17] border border-teal-500/50 p-5 flex flex-col justify-between shadow-[0_25px_50px_-12px_rgba(0,0,0,0.85)] z-20">
-        
-        <div class="flex-1 flex flex-col justify-center my-auto">
-          <span class="text-xs sm:text-sm font-semibold uppercase tracking-wider text-teal-400 drop-shadow-sm">
-            Смысловой перевод
-          </span>
-          
-          <h2 id="backTranslation" class="text-xl sm:text-2xl font-bold text-white mt-2 leading-snug drop-shadow-md">
-            С собой, пожалуйста. Я немного спешу.
-          </h2>
-
-          <div class="mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-inner">
-            <span class="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
-              <span>💡</span> Разговорный фокус:
-            </span>
-            <p id="backColloquial" class="text-sm sm:text-base text-slate-200 leading-relaxed font-normal">
-              Вопрос: «sur place» (на месте) или «à emporter» (с собой). Ответ: «pressé» (в спешке). Часто сокращают до «chuis un peu pressé».
-            </p>
-          </div>
+      <div id="cardBack" class="card-back pointer-events-none absolute inset-0 w-full h-full rounded-2xl bg-[#131B2B] border border-teal-500/40 p-4 flex flex-col justify-start gap-2.5 shadow-2xl overflow-y-auto">
+        <div class="flex-shrink-0">
+          <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Смысловой перевод</span>
+          <h2 id="backTranslation" class="text-base sm:text-lg font-bold text-slate-100 mt-1 leading-snug"></h2>
         </div>
 
-        <button id="btnFlipBack" class="w-full py-3.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-slate-100 text-sm font-bold border border-slate-700/80 active:scale-95 transition-all shadow-lg flex-shrink-0">
-          ← Вернуться к фразе
-        </button>
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex-shrink-0">
+          <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide">💡 Разговорный фокус:</span>
+          <p id="backColloquial" class="text-sm text-slate-200 mt-1 leading-relaxed"></p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-indigo-500/30 flex-shrink-0">
+          <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wide">📚 Живая грамматика и чтение:</span>
+          <p id="backGrammar" class="text-sm text-slate-200 mt-1 leading-relaxed"></p>
+        </div>
       </div>
 
     </div>
@@ -283,16 +274,16 @@
 
   <!-- Нижняя панель действий -->
   <footer class="w-full max-w-sm mx-auto grid grid-cols-3 gap-2 py-1 flex-shrink-0 z-20">
-    <button id="btnPass" class="py-2.5 px-1 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 backdrop-blur-md border border-white/15 text-slate-200 text-sm font-bold tracking-wide active:scale-95 transition-all shadow-md">
-      ≫ Passer
-    </button>
-    <button id="btnCorrect" class="py-2.5 px-1 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 backdrop-blur-md border border-white/15 text-amber-300 text-sm font-bold tracking-wide active:scale-95 transition-all flex items-center justify-center gap-1 shadow-md">
+    <button id="btnCorrect" class="py-2.5 px-2 rounded-xl bg-slate-800/90 border border-slate-700 text-amber-400 text-xs font-semibold active:scale-95 transition-all flex items-center justify-center gap-1">
       <span>⌫</span> Corriger
     </button>
-    <button id="btnValidate" class="py-2.5 px-1 rounded-2xl bg-gradient-to-r from-teal-400 to-teal-300 hover:from-teal-300 hover:to-teal-200 text-slate-950 text-sm font-extrabold tracking-wide shadow-[0_0_20px_rgba(45,212,191,0.45)] active:scale-95 transition-all">
+    <button id="btnPass" class="py-2.5 px-2 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 text-xs font-semibold active:scale-95 transition-all">
+      ≫ Passer
+    </button>
+    <button id="btnValidate" class="py-2.5 px-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold shadow-lg shadow-teal-950/50 active:scale-95 transition-all">
       ✓ Valider
     </button>
-  </footer>
+</footer>
 
   <script>
     const tg = window.Telegram?.WebApp;
@@ -1036,18 +1027,137 @@
       const totalNum = String(activeDeck.length).padStart(2, '0');
       document.getElementById('cardProgress').textContent = `${currentNum} / ${totalNum}`;
       document.getElementById('sceneImage').src = item.image;
-      document.getElementById('sceneContextRu').innerHTML = item.contextRu;
-      document.getElementById('targetPhrase').textContent = `"${item.phrase}"`;
+
+      const sceneContextEl = document.getElementById('sceneContextRu');
+      const targetPhraseEl = document.getElementById('targetPhrase');
+
+      sceneContextEl.innerHTML = item.contextRu;
+      targetPhraseEl.textContent = `"${item.phrase}"`;
       document.getElementById('targetPhonetic').textContent = item.phonetic;
       document.getElementById('backTranslation').textContent = item.translation;
       document.getElementById('backColloquial').textContent = item.colloquial;
+      document.getElementById('backGrammar').textContent = getGrammarNote(item);
+
+      const mainFontSize = window.getComputedStyle(targetPhraseEl).fontSize;
+      sceneContextEl.style.fontSize = mainFontSize;
+      sceneContextEl.style.lineHeight = '1.2';
+      sceneContextEl.style.maxHeight = '100%';
+      sceneContextEl.style.overflowY = 'auto';
+
       userInput.value = '';
       flipCard(false);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // НАВИГАЦИЯ СВАЙПАМИ (ВЛЕВО / ВПРАВО) БЕЗ ВЫЛЕТА TELEGRAM
-    // ══════════════════════════════════════════════════════════════════
+    function getGrammarNote(item) {
+      if (item.grammar) return item.grammar;
+      const p = item.phrase || "";
+      const ph = item.phonetic || "";
+
+      if (/c'est quoi ça/i.test(p)) {
+        return "В живой речи французы не говорят длинное школьное «Qu'est-ce que c'est ?», а ставят вопрос «quoi» прямо в конец: «C'est quoi ça ?».";
+      }
+      if (/s'te plaît/i.test(p)) {
+        return "В быстром темпе вежливое «s'il te plaît» сжимается до «s'te plaît» (/stə plɛ/) — слово «il» просто проглатывается.";
+      }
+      if (/pas besoin de/i.test(p)) {
+        return "В разговорном отказе «pas besoin de...» выбрасывают длинное начало «il n'y a», а после «de» никогда не ставят артикль.";
+      }
+      if (/y a moyen/i.test(p)) {
+        return "В устной речи местоимение «il» в обороте «il y a» почти всегда выпадает — остаётся быстрое «y a» (/ja/).";
+      }
+      if (/n'y a plus d/i.test(p)) {
+        return "В конструкции «plus de / d'» (больше нет) буква «s» в слове «plus» не читается (/ply/), а следом всегда идёт чистое «de» без артикля.";
+      }
+      if (/c'est par où/i.test(p)) {
+        return "Разговорная схема вопроса: сначала называем место («Le métro...»), а вопрос «c'est par où ?» (это куда?) кидаем в самый конец.";
+      }
+      if (/c'est à quelle heure/i.test(p)) {
+        return "Чтобы не менять слова местами, французы начинают вопрос с универсального «C'est à quelle heure...», а саму тему ставят в конец.";
+      }
+      if (/me la chauffer/i.test(p)) {
+        return "Слова-заменители «мне её» (me la) во французском всегда ставятся перед самим действием («мне её подогреть»), а не после него.";
+      }
+      if (/\b(mettez-m'en|vous en prendre|on en a)\b/i.test(p)) {
+        return "Короткое слово «en» заменяет слово «этого/от этого», чтобы дважды не повторять название предмета или время.";
+      }
+      if (/dix heures/i.test(p)) {
+        return "Отдельно «dix» читается как /dis/, но перед гласной буква «x» озвончается и превращается в чёткое «з» — /di.z‿œʁ/.";
+      }
+      if (/reçu/i.test(p)) {
+        return "Хвостик под буквой «ç» (cédille) в слове «reçu» нужен, чтобы перед «u» она читалась мягко как /s/, а не как /k/.";
+      }
+      if (/\b(cuite|fraîche|bonne)\b/i.test(p)) {
+        return "В мужском роде последняя согласная часто немая (cuit, bon), но в женском добавляется «-e», и конечный звук сразу начинает звучать.";
+      }
+      if (/remettez-moi|ajoutez-moi|laissez-moi|envoyez-moi/i.test(p)) {
+        return "В прямой просьбе («повторите мне», «оставьте мне») слово «moi» цепляется позади глагола через дефис.";
+      }
+      if (/je vais vous prendre/i.test(p)) {
+        return "Чтобы сказать «я сейчас возьму», французы берут связку «je vais + действие» — это звучит живее и естественнее будущего времени.";
+      }
+      if (/par carte|par mail/i.test(p)) {
+        return "После предлога «par» (способ оплаты или связи: «par carte», «par mail») артикли никогда не ставятся.";
+      }
+      if (/sans flash|sans ordonnance/i.test(p)) {
+        return "После слова «sans» (без) артикль отпадает — говорят просто «sans flash», «sans ordonnance».";
+      }
+      if (/en soute|en cabine|en visio|en anglais/i.test(p)) {
+        return "Предлог «en» работает как быстрый переключатель режима или языка («en visio», «en cabine», «en russe») и съедает артикль после себя.";
+      }
+      if (/combien de|un peu de|une boîte de|un paquet de|une part de/i.test(p)) {
+        return "После слов количества и упаковки («combien de», «une boîte de», «un peu de») всегда ставится просто «de» без артиклей.";
+      }
+      if (/j'ai la gorge qui/i.test(p)) {
+        return "Описывая самочувствие, французы строят живую цепочку «У меня горло, которое...» (J'ai la gorge qui brûle).";
+      }
+      if (/il vaut mieux/i.test(p)) {
+        return "После разговорного чанка «il vaut mieux» (лучше сделать так) следующее действие ставится сразу напрямую без предлогов.";
+      }
+      if (/le plus proche/i.test(p)) {
+        return "Конструкция «самый близкий» (le plus proche) всегда ставится после самого предмета: «au métro le plus proche».";
+      }
+      if (/a changé/i.test(p)) {
+        return "Прошедшее время в речи строится из двух деталей: короткого «a» и глагола с окончанием «-é» (a changé — изменился), которое читается как /e/.";
+      }
+      if (/quelque chose de/i.test(p)) {
+        return "Когда после «quelque chose» (что-нибудь) идёт описание или свойство, между ними обязательно вставляется связка «de».";
+      }
+      if (/va bien en/i.test(p)) {
+        return "Слово «bien» внутри вопроса («va bien... ?») переводится не как «хорошо», а как разговорное уточнение «точно ли / действительно ли?».";
+      }
+      if (/sac à dos/i.test(p)) {
+        return "Предлог «à» между двумя существительными («sac à dos» — рюкзак) показывает назначение предмета и не требует артикля.";
+      }
+      if (/valise|casiers/i.test(p)) {
+        return "Буква «s» зажата между двумя гласными, поэтому она озвончается и читается как чёткое «з» (/va.liz/, /ka.zje/).";
+      }
+      if (/voie|voiture|trois|droit/i.test(p)) {
+        return "Сочетание букв «oi» во французском всегда читается как сочное «уа» (/vwa/, /tʁwa/), а не «ои».";
+      }
+      if (/ligne|consigne|signe/i.test(p)) {
+        return "Сочетание букв «gn» всегда даёт один мягкий звук, похожий на русское «нь» (/liɲ/, /siɲ/).";
+      }
+      if (/comptabilité/i.test(p)) {
+        return "В слове «comptabilité» буква «p» внутри пишется только по старой традиции, а в речи полностью проглатывается (/kɔ̃.ta.bi.li.te/).";
+      }
+      if (/\bon\b/i.test(p)) {
+        return "В живой речи французы почти не говорят «nous» (мы) — вместо него всегда используют короткое «on» с самой простой формой глагола.";
+      }
+      if (/\b(au|du)\b/i.test(p)) {
+        return "Во французском предлоги «à» и «de» никогда не стоят рядом с мужским артиклем «le» — они сливаются в короткие «au» (/o/) и «du» (/dy/).";
+      }
+      if (/\b(vous pouvez|je peux|je dois)\b/i.test(p)) {
+        return "Когда идут два глагола подряд, меняется только первый, а у второго на конце «-er» буква «r» никогда не читается (звучит чистое /e/).";
+      }
+      if (ph.includes("‿")) {
+        return "Сцепка слов (знак «‿» в транскрипции): немая буква на конце слова вдруг просыпается и сливается со следующей гласной.";
+      }
+      if (/\b(la|une|cette)\b/i.test(p)) {
+        return "Слова-маркеры «la» (эта), «une» (одна) и «cette» показывают, что предмет после них — женского рода.";
+      }
+      return "В разговорном французском вопрос задаётся просто подъёмом голоса в конце фразы без школьных перестановок слов, а конечные «-e, -s, -t» не читаются.";
+    }
+
     function nextCard() {
       if (!activeDeck || activeDeck.length <= 1) return;
       stopAllAudio();
@@ -1513,16 +1623,18 @@
 
     document.getElementById('btnPass').addEventListener('click', () => {
       haptic('medium');
-      flipCard(true);
-    });
+      const container = document.getElementById('cardContainer');
+      const back = document.getElementById('cardBack');
+      if (!container) return;
 
-    document.getElementById('btnFlipBack').addEventListener('click', () => {
-      haptic('light');
-      flipCard(false);
+      const isFlipped = container.classList.contains('card-flipped');
+      if (typeof flipCard === 'function') {
+        flipCard(!isFlipped);
+      } else {
+        container.classList.toggle('card-flipped');
+        if (back) back.classList.toggle('pointer-events-none');
+      }
     });
-
-    // Первоначальный рендер
-    updateTopicCounters();
     renderCard(0);
   </script>
 </body>
