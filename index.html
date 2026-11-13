@@ -1032,13 +1032,121 @@
       document.getElementById('targetPhonetic').textContent = item.phonetic;
       document.getElementById('backTranslation').textContent = item.translation;
       document.getElementById('backColloquial').textContent = item.colloquial;
+      document.getElementById('backGrammar').textContent = getGrammarNote(item);
       userInput.value = '';
       flipCard(false);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // НАВИГАЦИЯ СВАЙПАМИ (ВЛЕВО / ВПРАВО) БЕЗ ВЫЛЕТА TELEGRAM
-    // ══════════════════════════════════════════════════════════════════
+    function getGrammarNote(item) {
+      if (item.grammar) return item.grammar;
+      const p = item.phrase || "";
+      const ph = item.phonetic || "";
+
+      if (/c'est quoi ça/i.test(p)) {
+        return "В живой речи французы не говорят длинное школьное «Qu'est-ce que c'est ?», а ставят вопрос «quoi» прямо в конец: «C'est quoi ça ?».";
+      }
+      if (/s'te plaît/i.test(p)) {
+        return "В быстром темпе вежливое «s'il te plaît» сжимается до «s'te plaît» (/stə plɛ/) — слово «il» просто проглатывается.";
+      }
+      if (/pas besoin de/i.test(p)) {
+        return "В разговорном отказе «pas besoin de...» выбрасывают длинное начало «il n'y a», а после «de» никогда не ставят артикль.";
+      }
+      if (/y a moyen/i.test(p)) {
+        return "В устной речи местоимение «il» в обороте «il y a» почти всегда выпадает — остаётся быстрое «y a» (/ja/).";
+      }
+      if (/n'y a plus d/i.test(p)) {
+        return "В конструкции «plus de / d'» (больше нет) буква «s» в слове «plus» не читается (/ply/), а следом всегда идёт чистое «de» без артикля.";
+      }
+      if (/c'est par où/i.test(p)) {
+        return "Разговорная схема вопроса: сначала называем место («Le métro...»), а вопрос «c'est par où ?» (это куда?) кидаем в самый конец.";
+      }
+      if (/c'est à quelle heure/i.test(p)) {
+        return "Чтобы не менять слова местами, французы начинают вопрос с универсального «C'est à quelle heure...», а саму тему ставят в конец.";
+      }
+      if (/me la chauffer/i.test(p)) {
+        return "Слова-заменители «мне её» (me la) во французском всегда ставятся перед самим действием («мне её подогреть»), а не после него.";
+      }
+      if (/\b(mettez-m'en|vous en prendre|on en a)\b/i.test(p)) {
+        return "Короткое слово «en» заменяет слово «этого/от этого», чтобы дважды не повторять название предмета или время.";
+      }
+      if (/dix heures/i.test(p)) {
+        return "Отдельно «dix» читается как /dis/, но перед гласной буква «x» озвончается и превращается в чёткое «з» — /di.z‿œʁ/.";
+      }
+      if (/reçu/i.test(p)) {
+        return "Хвостик под буквой «ç» (cédille) в слове «reçu» нужен, чтобы перед «u» она читалась мягко как /s/, а не как /k/.";
+      }
+      if (/\b(cuite|fraîche|bonne)\b/i.test(p)) {
+        return "В мужском роде последняя согласная часто немая (cuit, bon), но в женском добавляется «-e», и конечный звук сразу начинает звучать.";
+      }
+      if (/remettez-moi|ajoutez-moi|laissez-moi|envoyez-moi/i.test(p)) {
+        return "В прямой просьбе («повторите мне», «оставьте мне») слово «moi» цепляется позади глагола через дефис.";
+      }
+      if (/je vais vous prendre/i.test(p)) {
+        return "Чтобы сказать «я сейчас возьму», французы берут связку «je vais + действие» — это звучит живее и естественнее будущего времени.";
+      }
+      if (/par carte|par mail/i.test(p)) {
+        return "После предлога «par» (способ оплаты или связи: «par carte», «par mail») артикли никогда не ставятся.";
+      }
+      if (/sans flash|sans ordonnance/i.test(p)) {
+        return "После слова «sans» (без) артикль отпадает — говорят просто «sans flash», «sans ordonnance».";
+      }
+      if (/en soute|en cabine|en visio|en anglais/i.test(p)) {
+        return "Предлог «en» работает как быстрый переключатель режима или языка («en visio», «en cabine», «en russe») и съедает артикль после себя.";
+      }
+      if (/combien de|un peu de|une boîte de|un paquet de|une part de/i.test(p)) {
+        return "После слов количества и упаковки («combien de», «une boîte de», «un peu de») всегда ставится просто «de» без артиклей.";
+      }
+      if (/j'ai la gorge qui/i.test(p)) {
+        return "Описывая самочувствие, французы строят живую цепочку «У меня горло, которое...» (J'ai la gorge qui brûle).";
+      }
+      if (/il vaut mieux/i.test(p)) {
+        return "После разговорного чанка «il vaut mieux» (лучше сделать так) следующее действие ставится сразу напрямую без предлогов.";
+      }
+      if (/le plus proche/i.test(p)) {
+        return "Конструкция «самый близкий» (le plus proche) всегда ставится после самого предмета: «au métro le plus proche».";
+      }
+      if (/a changé/i.test(p)) {
+        return "Прошедшее время в речи строится из двух деталей: короткого «a» и глагола с окончанием «-é» (a changé — изменился), которое читается как /e/.";
+      }
+      if (/quelque chose de/i.test(p)) {
+        return "Когда после «quelque chose» (что-нибудь) идёт описание или свойство, между ними обязательно вставляется связка «de».";
+      }
+      if (/va bien en/i.test(p)) {
+        return "Слово «bien» внутри вопроса («va bien... ?») переводится не как «хорошо», а как разговорное уточнение «точно ли / действительно ли?».";
+      }
+      if (/sac à dos/i.test(p)) {
+        return "Предлог «à» между двумя существительными («sac à dos» — рюкзак) показывает назначение предмета и не требует артикля.";
+      }
+      if (/valise|casiers/i.test(p)) {
+        return "Буква «s» зажата между двумя гласными, поэтому она озвончается и читается как чёткое «з» (/va.liz/, /ka.zje/).";
+      }
+      if (/voie|voiture|trois|droit/i.test(p)) {
+        return "Сочетание букв «oi» во французском всегда читается как сочное «уа» (/vwa/, /tʁwa/), а не «ои».";
+      }
+      if (/ligne|consigne|signe/i.test(p)) {
+        return "Сочетание букв «gn» всегда даёт один мягкий звук, похожий на русское «нь» (/liɲ/, /siɲ/).";
+      }
+      if (/comptabilité/i.test(p)) {
+        return "В слове «comptabilité» буква «p» внутри пишется только по старой традиции, а в речи полностью проглатывается (/kɔ̃.ta.bi.li.te/).";
+      }
+      if (/\bon\b/i.test(p)) {
+        return "В живой речи французы почти не говорят «nous» (мы) — вместо него всегда используют короткое «on» с самой простой формой глагола.";
+      }
+      if (/\b(au|du)\b/i.test(p)) {
+        return "Во французском предлоги «à» и «de» никогда не стоят рядом с мужским артиклем «le» — они сливаются в короткие «au» (/o/) и «du» (/dy/).";
+      }
+      if (/\b(vous pouvez|je peux|je dois)\b/i.test(p)) {
+        return "Когда идут два глагола подряд, меняется только первый, а у второго на конце «-er» буква «r» никогда не читается (звучит чистое /e/).";
+      }
+      if (ph.includes("‿")) {
+        return "Сцепка слов (знак «‿» в транскрипции): немая буква на конце слова вдруг просыпается и сливается со следующей гласной.";
+      }
+      if (/\b(la|une|cette)\b/i.test(p)) {
+        return "Слова-маркеры «la» (эта), «une» (одна) и «cette» показывают, что предмет после них — женского рода.";
+      }
+      return "В разговорном французском вопрос задаётся просто подъёмом голоса в конце фразы без школьных перестановок слов, а конечные «-e, -s, -t» не читаются.";
+    }
+
     function nextCard() {
       if (!activeDeck || activeDeck.length <= 1) return;
       stopAllAudio();
