@@ -1027,12 +1027,23 @@
       const totalNum = String(activeDeck.length).padStart(2, '0');
       document.getElementById('cardProgress').textContent = `${currentNum} / ${totalNum}`;
       document.getElementById('sceneImage').src = item.image;
-      document.getElementById('sceneContextRu').innerHTML = item.contextRu;
-      document.getElementById('targetPhrase').textContent = `"${item.phrase}"`;
+
+      const sceneContextEl = document.getElementById('sceneContextRu');
+      const targetPhraseEl = document.getElementById('targetPhrase');
+
+      sceneContextEl.innerHTML = item.contextRu;
+      targetPhraseEl.textContent = `"${item.phrase}"`;
       document.getElementById('targetPhonetic').textContent = item.phonetic;
       document.getElementById('backTranslation').textContent = item.translation;
       document.getElementById('backColloquial').textContent = item.colloquial;
       document.getElementById('backGrammar').textContent = getGrammarNote(item);
+
+      const mainFontSize = window.getComputedStyle(targetPhraseEl).fontSize;
+      sceneContextEl.style.fontSize = mainFontSize;
+      sceneContextEl.style.lineHeight = '1.2';
+      sceneContextEl.style.maxHeight = '100%';
+      sceneContextEl.style.overflowY = 'auto';
+
       userInput.value = '';
       flipCard(false);
     }
